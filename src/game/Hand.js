@@ -10,8 +10,12 @@ export class Hand extends Container {
   /** Cartas já jogadas, ainda animando até desaparecer. */
   #leaving = new Set();
 
-  constructor() {
+  #art;
+
+  /** @param {Map<string, import("pixi.js").Texture>} [art] id do modelo -> ilustração */
+  constructor(art = new Map()) {
     super();
+    this.#art = art;
     // Permite que cartas em hover/arraste fiquem acima das demais (zIndex).
     this.sortableChildren = true;
   }
@@ -67,7 +71,7 @@ export class Hand extends Container {
   }
 
   #spawn(card) {
-    const view = new CardView(card);
+    const view = new CardView(card, this.#art.get(card.templateId) ?? null);
     view.placeAt(HAND.spawn.x, HAND.spawn.y);
     this.#views.set(card.id, view);
     this.addChild(view);

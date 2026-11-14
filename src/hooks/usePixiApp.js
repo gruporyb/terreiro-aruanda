@@ -17,9 +17,10 @@ const destroyApp = (app) => app.destroy(true, { children: true });
  * Cria uma aplicação Pixi dentro de `containerRef` e a destrói ao desmontar.
  *
  * @param {React.RefObject<HTMLElement>} containerRef elemento que receberá o canvas
- * @param {(app: Application) => void} setupScene função estável (fora do componente)
+ * @param {{ preload?: () => Promise<any>, setup: (app: Application, assets: any) => void }} loader
+ *   objeto estável (fora do componente): `preload` carrega recursos, `setup` monta a cena
  */
-export function usePixiApp(containerRef, setupScene) {
+export function usePixiApp(containerRef, loader) {
   useEffect(() => {
     const app = new Application();
     let isDisposed = false;
@@ -28,15 +29,16 @@ export function usePixiApp(containerRef, setupScene) {
     const mount = async () => {
       await app.init(APP_OPTIONS);
       isInitialized = true;
+      const assets = await loader.preload?.();
 
-      // O componente pode ter desmontado durante o init (ex.: React StrictMode).
+      // O componente pode ter desmontado durante o init/preload (ex.: StrictMode).
       if (isDisposed) {
         destroyApp(app);
         return;
       }
 
       containerRef.current.appendChild(app.canvas);
-      setupScene(app);
+      loader.setup(app, assets);
     };
 
     mount().catch((error) =>
@@ -47,5 +49,5 @@ export function usePixiApp(containerRef, setupScene) {
       isDisposed = true;
       if (isInitialized) destroyApp(app);
     };
-  }, [containerRef, setupScene]);
+  }, [containerRef, loader]);
 }

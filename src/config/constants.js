@@ -36,14 +36,16 @@ export const COLORS = Object.freeze({
 export const BORDER_WIDTH = Object.freeze({ idle: 2, active: 3 });
 
 export const CARD = Object.freeze({
-  width: 120,
-  height: 170,
+  width: 136,
+  height: 210,
   radius: 10,
   padding: 10,
   badgeRadius: 11,
-  titleTop: 32,
-  dividerY: 84,
-  statsTop: 92,
+  /** Janela da ilustração da entidade (a largura é a da carta menos o padding). */
+  art: Object.freeze({ top: 36, height: 70, radius: 6 }),
+  titleTop: 110,
+  dividerY: 158,
+  statsTop: 164,
 });
 
 /** Área onde as cartas são soltas para serem jogadas. */
@@ -57,10 +59,10 @@ export const TABLE = Object.freeze({
 
 export const HAND = Object.freeze({
   centerX: 400,
-  baseY: 500,
+  baseY: 480,
   maxWidth: 700,
   maxStep: 130,
-  arcDrop: 16,
+  arcDrop: 10,
   maxTilt: 0.1,
   /** De onde as cartas "saem" ao serem compradas (fora da tela, à direita). */
   spawn: Object.freeze({ x: 900, y: 540 }),

@@ -1,4 +1,5 @@
 import { END_TURN_BUTTON } from "../config/constants.js";
+import { loadCardArt } from "./cardArt.js";
 import { DragController } from "./DragController.js";
 import { DropZone } from "./DropZone.js";
 import { GameOverlay } from "./GameOverlay.js";
@@ -21,13 +22,19 @@ export class TerreiroScene {
   #rng;
   #state;
   #table = new DropZone();
-  #hand = new Hand();
+  #hand;
   #hud = new Hud();
   #endTurnButton;
   #overlay;
 
-  constructor(app, rng = Math.random) {
+  /**
+   * @param {import("pixi.js").Application} app
+   * @param {Map<string, import("pixi.js").Texture>} [art] ilustrações já carregadas
+   * @param {() => number} [rng]
+   */
+  constructor(app, art = new Map(), rng = Math.random) {
     this.#rng = rng;
+    this.#hand = new Hand(art);
     this.#state = createGame(rng);
 
     this.#endTurnButton = new Button({
@@ -93,5 +100,11 @@ export class TerreiroScene {
   }
 }
 
-/** Função estável (fora do componente React) passada ao hook usePixiApp. */
-export const createTerreiroScene = (app) => new TerreiroScene(app);
+/**
+ * Objeto estável (fora do componente React) usado pelo hook usePixiApp:
+ * `preload` carrega recursos antes de montar; `setup` monta a cena.
+ */
+export const terreiroSceneLoader = Object.freeze({
+  preload: loadCardArt,
+  setup: (app, art) => new TerreiroScene(app, art),
+});

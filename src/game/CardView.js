@@ -1,8 +1,9 @@
-import { Container, Graphics, Rectangle } from "pixi.js";
+import { Container, Graphics, Rectangle, Sprite } from "pixi.js";
 import { CARD, COLORS, FONT, MOTION, Z_INDEX } from "../config/constants.js";
 import { CardMotion } from "./CardMotion.js";
 import { formatStats } from "./cardText.js";
 import { drawCardBackground } from "./drawCardBackground.js";
+import { coverScale } from "../utils/math.js";
 import { ELEMENT_COLORS } from "./elementColors.js";
 import { createLabel } from "./ui/createLabel.js";
 
@@ -18,6 +19,7 @@ export class CardView extends Container {
   }
 
   #card;
+  #texture;
   #motion = new CardMotion();
   #background = new Graphics();
   #costBadge = new Graphics();
@@ -27,9 +29,14 @@ export class CardView extends Container {
   #isDismissing = false;
   #order = 0;
 
-  constructor(card) {
+  /**
+   * @param {object} card dados da carta
+   * @param {import("pixi.js").Texture | null} [texture] ilustração (opcional)
+   */
+  constructor(card, texture = null) {
     super();
     this.#card = card;
+    this.#texture = texture;
 
     // Pivô no centro: posição, escala e rotação partem do meio da carta.
     this.pivot.set(CARD.width / 2, CARD.height / 2);
@@ -169,6 +176,7 @@ export class CardView extends Container {
 
     this.addChild(
       this.#background,
+      this.#createArt(),
       this.#costBadge,
       costText,
       elementLabel,
@@ -176,6 +184,52 @@ export class CardView extends Container {
       divider,
       stats,
     );
+  }
+
+  /** Janela da ilustração: imagem recortada, ou um emblema do elemento como reserva. */
+  #createArt() {
+    const { padding, art } = CARD;
+    const width = CARD.width - padding * 2;
+    const center = { x: padding + width / 2, y: art.top + art.height / 2 };
+    const color = ELEMENT_COLORS[this.#card.element];
+    const drawWindow = (graphics) =>
+      graphics.roundRect(padding, art.top, width, art.height, art.radius);
+
+    const container = new Container();
+    container.addChild(drawWindow(new Graphics()).fill({ color, alpha: 0.12 }));
+
+    if (!this.#texture) {
+      container.addChild(this.#createEmblem(center, color));
+      return container;
+    }
+
+    const sprite = new Sprite(this.#texture);
+    sprite.anchor.set(0.5);
+    sprite.position.set(center.x, center.y);
+    sprite.scale.set(coverScale(this.#texture, { width, height: art.height }));
+
+    const mask = drawWindow(new Graphics()).fill({ color: 0xffffff });
+    sprite.mask = mask;
+    container.addChild(sprite, mask);
+    return container;
+  }
+
+  #createEmblem(center, color) {
+    const emblem = new Container();
+    emblem.addChild(
+      new Graphics().circle(center.x, center.y, 24).stroke({ width: 2, color }),
+      createLabel(this.#card.element[0], {
+        size: 26,
+        bold: true,
+        font: FONT.display,
+        color,
+        x: center.x,
+        y: center.y,
+        anchorX: 0.5,
+        anchorY: 0.5,
+      }),
+    );
+    return emblem;
   }
 
   #bindHover() {

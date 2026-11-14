@@ -20,6 +20,7 @@ function buildDeck(rng) {
     Array.from({ length: RULES.copiesPerCard }, (_, copy) => ({
       ...template,
       id: `${template.id}#${copy + 1}`,
+      templateId: template.id,
     })),
   );
   return shuffle(cards, rng);
