@@ -1,5 +1,4 @@
 import { Container } from "pixi.js";
-import { HAND } from "../config/constants.js";
 import { CardView } from "./CardView.js";
 import { computeHandLayout } from "./handLayout.js";
 
@@ -10,11 +9,16 @@ export class Hand extends Container {
   /** Cartas já jogadas, ainda animando até desaparecer. */
   #leaving = new Set();
 
+  #layout;
   #art;
 
-  /** @param {Map<string, import("pixi.js").Texture>} [art] id do modelo -> ilustração */
-  constructor(art = new Map()) {
+  /**
+   * @param {object} handLayout configuração da mão (layout.hand)
+   * @param {Map<string, import("pixi.js").Texture>} [art] id do modelo -> ilustração
+   */
+  constructor(handLayout, art = new Map()) {
     super();
+    this.#layout = handLayout;
     this.#art = art;
     // Permite que cartas em hover/arraste fiquem acima das demais (zIndex).
     this.sortableChildren = true;
@@ -35,11 +39,16 @@ export class Hand extends Container {
       view.dismiss(dismissTarget.x, dismissTarget.y);
     }
 
-    const slots = computeHandLayout(cards.length);
+    const slots = computeHandLayout(cards.length, this.#layout);
     cards.forEach((card, index) => {
       const view = this.#views.get(card.id) ?? this.#spawn(card);
       view.setSlot(slots[index], index);
     });
+  }
+
+  /** Procura, entre as cartas da mão, a que veio do modelo `templateId`. */
+  findViewByTemplate(templateId) {
+    return [...this.#views.values()].find((view) => view.card.templateId === templateId) ?? null;
   }
 
   /** Atualiza quais cartas podem ser jogadas (ex.: Axé suficiente). */
@@ -72,7 +81,7 @@ export class Hand extends Container {
 
   #spawn(card) {
     const view = new CardView(card, this.#art.get(card.templateId) ?? null);
-    view.placeAt(HAND.spawn.x, HAND.spawn.y);
+    view.placeAt(this.#layout.spawn.x, this.#layout.spawn.y);
     this.#views.set(card.id, view);
     this.addChild(view);
     return view;

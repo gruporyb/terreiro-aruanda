@@ -1,13 +1,16 @@
 import { Container, Graphics, Rectangle, Sprite } from "pixi.js";
 import { CARD, COLORS, FONT, MOTION, Z_INDEX } from "../config/constants.js";
-import { CardMotion } from "./CardMotion.js";
-import { formatStats } from "./cardText.js";
-import { drawCardBackground } from "./drawCardBackground.js";
+import { ICON_COLORS } from "../config/icons.js";
 import { coverScale } from "../utils/math.js";
+import { CardMotion } from "./CardMotion.js";
+import { getCardStats } from "./cardStats.js";
+import { drawCardBackground } from "./drawCardBackground.js";
 import { ELEMENT_COLORS } from "./elementColors.js";
+import { createIcon } from "./ui/createIcon.js";
 import { createLabel } from "./ui/createLabel.js";
 
 const BADGE_CENTER = CARD.padding + CARD.badgeRadius;
+const CONTENT_WIDTH = CARD.width - CARD.padding * 2;
 
 /** Representação visual e interativa de uma carta. Não conhece as regras do jogo. */
 export class CardView extends Container {
@@ -132,11 +135,9 @@ export class CardView extends Container {
 
   #buildVisuals() {
     const { name, element, cost } = this.#card;
-    const elementColor = ELEMENT_COLORS[element];
-    const contentWidth = CARD.width - CARD.padding * 2;
 
     const costText = createLabel(String(cost), {
-      size: 14,
+      size: 16,
       bold: true,
       color: COLORS.buttonText,
       x: BADGE_CENTER,
@@ -145,34 +146,27 @@ export class CardView extends Container {
       anchorY: 0.5,
     });
     const elementLabel = createLabel(element, {
-      size: 12,
+      size: 13,
       bold: true,
-      color: elementColor,
+      color: ELEMENT_COLORS[element],
       x: CARD.padding + CARD.badgeRadius * 2 + 6,
       y: BADGE_CENTER,
       anchorY: 0.5,
     });
     const title = createLabel(name, {
-      size: 12,
+      size: 13,
       bold: true,
       font: FONT.display,
       x: CARD.width / 2,
       y: CARD.titleTop,
       anchorX: 0.5,
       align: "center",
-      wrapWidth: contentWidth,
+      wrapWidth: CONTENT_WIDTH,
     });
     const divider = new Graphics()
       .moveTo(CARD.padding, CARD.dividerY)
       .lineTo(CARD.width - CARD.padding, CARD.dividerY)
       .stroke({ width: 1, color: COLORS.borderIdle });
-    const stats = createLabel(formatStats(this.#card), {
-      size: 11,
-      color: COLORS.textBody,
-      x: CARD.padding,
-      y: CARD.statsTop,
-      wrapWidth: contentWidth,
-    });
 
     this.addChild(
       this.#background,
@@ -182,18 +176,51 @@ export class CardView extends Container {
       elementLabel,
       title,
       divider,
-      stats,
+      this.#createStats(),
     );
+  }
+
+  /** Atributos como colunas: ícone em cima, valor embaixo (ataque, defesa, passe). */
+  #createStats() {
+    const { padding, statsTop, stat } = CARD;
+    const columnWidth = CONTENT_WIDTH / 3;
+    const container = new Container();
+
+    getCardStats(this.#card).forEach(({ icon, value, isActive }, index) => {
+      const centerX = padding + columnWidth * (index + 0.5);
+      const alpha = isActive ? 1 : stat.inactiveAlpha;
+
+      if (icon) {
+        const iconView = createIcon(icon, {
+          size: stat.iconSize,
+          color: ICON_COLORS[icon],
+          alpha,
+        });
+        iconView.position.set(centerX, statsTop + stat.iconSize / 2);
+        container.addChild(iconView);
+      }
+
+      container.addChild(
+        createLabel(value, {
+          size: stat.valueSize,
+          bold: true,
+          color: isActive ? COLORS.textTitle : COLORS.textMuted,
+          x: centerX,
+          y: statsTop + stat.iconSize + stat.valueGap,
+          anchorX: 0.5,
+        }),
+      );
+    });
+    return container;
   }
 
   /** Janela da ilustração: imagem recortada, ou um emblema do elemento como reserva. */
   #createArt() {
     const { padding, art } = CARD;
-    const width = CARD.width - padding * 2;
-    const center = { x: padding + width / 2, y: art.top + art.height / 2 };
+    const center = { x: padding + CONTENT_WIDTH / 2, y: art.top + art.height / 2 };
     const color = ELEMENT_COLORS[this.#card.element];
     const drawWindow = (graphics) =>
-      graphics.roundRect(padding, art.top, width, art.height, art.radius);
+      graphics.roundRect(padding, art.top, CONTENT_WIDTH, art.height, art.radius);
 
     const container = new Container();
     container.addChild(drawWindow(new Graphics()).fill({ color, alpha: 0.12 }));
@@ -206,7 +233,7 @@ export class CardView extends Container {
     const sprite = new Sprite(this.#texture);
     sprite.anchor.set(0.5);
     sprite.position.set(center.x, center.y);
-    sprite.scale.set(coverScale(this.#texture, { width, height: art.height }));
+    sprite.scale.set(coverScale(this.#texture, { width: CONTENT_WIDTH, height: art.height }));
 
     const mask = drawWindow(new Graphics()).fill({ color: 0xffffff });
     sprite.mask = mask;
@@ -217,9 +244,9 @@ export class CardView extends Container {
   #createEmblem(center, color) {
     const emblem = new Container();
     emblem.addChild(
-      new Graphics().circle(center.x, center.y, 24).stroke({ width: 2, color }),
+      new Graphics().circle(center.x, center.y, 22).stroke({ width: 2, color }),
       createLabel(this.#card.element[0], {
-        size: 26,
+        size: 24,
         bold: true,
         font: FONT.display,
         color,

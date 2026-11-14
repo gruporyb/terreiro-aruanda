@@ -2,23 +2,34 @@ import { useEffect } from "react";
 import { Application } from "pixi.js";
 import { CANVAS } from "../config/constants.js";
 
-const APP_OPTIONS = {
-  width: CANVAS.width,
-  height: CANVAS.height,
-  background: CANVAS.background,
-  antialias: true,
-  resolution: window.devicePixelRatio || 1,
-  autoDensity: true,
-};
+const MAX_RESOLUTION = 3;
+
+/**
+ * Resolução = densidade da tela x ampliação por CSS. Em tablets o canvas é
+ * exibido maior que seu tamanho lógico; renderizar com mais pixels mantém
+ * textos e ícones nítidos.
+ */
+function createAppOptions({ width, height }, cssWidth) {
+  const density = window.devicePixelRatio || 1;
+  const zoom = Math.max(1, cssWidth / width);
+  return {
+    width,
+    height,
+    background: CANVAS.background,
+    antialias: true,
+    resolution: Math.min(MAX_RESOLUTION, density * zoom),
+    autoDensity: true,
+  };
+}
 
 const destroyApp = (app) => app.destroy(true, { children: true });
 
 /**
- * Cria uma aplicação Pixi dentro de `containerRef` e a destrói ao desmontar.
+ * Cria uma aplicação Pixi dentro de `containerRef` e a destrói ao desmontar
+ * (ou quando o `loader` muda, por exemplo ao girar o aparelho).
  *
  * @param {React.RefObject<HTMLElement>} containerRef elemento que receberá o canvas
- * @param {{ preload?: () => Promise<any>, setup: (app: Application, assets: any) => void }} loader
- *   objeto estável (fora do componente): `preload` carrega recursos, `setup` monta a cena
+ * @param {{ size: {width: number, height: number}, preload?: () => Promise<any>, setup: (app: Application, assets: any) => void }} loader
  */
 export function usePixiApp(containerRef, loader) {
   useEffect(() => {
@@ -27,7 +38,8 @@ export function usePixiApp(containerRef, loader) {
     let isInitialized = false;
 
     const mount = async () => {
-      await app.init(APP_OPTIONS);
+      const cssWidth = containerRef.current.clientWidth;
+      await app.init(createAppOptions(loader.size, cssWidth));
       isInitialized = true;
       const assets = await loader.preload?.();
 

@@ -1,5 +1,5 @@
 import { Container, Graphics } from "pixi.js";
-import { BORDER_WIDTH, COLORS, FONT, TABLE } from "../config/constants.js";
+import { BORDER_WIDTH, COLORS, FONT } from "../config/constants.js";
 import { createLabel } from "./ui/createLabel.js";
 
 const STYLE_BY_HIGHLIGHT = {
@@ -10,43 +10,50 @@ const STYLE_BY_HIGHLIGHT = {
 
 /** A "gira": área da mesa onde as cartas são soltas para serem jogadas. */
 export class DropZone extends Container {
+  #table;
   #frame = new Graphics();
+  #hint;
 
-  constructor() {
+  /** @param {{x: number, y: number, width: number, height: number, radius: number, center: {x: number, y: number}}} table */
+  constructor(table) {
     super();
-    const hint = createLabel("Gira\nsolte uma carta aqui", {
-      size: 16,
+    this.#table = table;
+
+    this.#hint = createLabel("Gira\nsolte uma carta aqui", {
+      size: 18,
       font: FONT.display,
       color: COLORS.textMuted,
-      x: this.center.x,
-      y: this.center.y,
+      x: table.center.x,
+      y: table.center.y - 14,
       anchorX: 0.5,
       anchorY: 0.5,
       align: "center",
     });
-    this.addChild(this.#frame, hint);
+    this.addChild(this.#frame, this.#hint);
     this.setHighlight("idle");
   }
 
+  /** O texto "solte uma carta aqui" some quando outro conteúdo ocupa a mesa (tutorial). */
+  setHintVisible(isVisible) {
+    this.#hint.visible = isVisible;
+  }
+
   get center() {
-    return { x: TABLE.x + TABLE.width / 2, y: TABLE.y + TABLE.height / 2 };
+    return this.#table.center;
   }
 
   containsPoint({ x, y }) {
-    return (
-      x >= TABLE.x &&
-      x <= TABLE.x + TABLE.width &&
-      y >= TABLE.y &&
-      y <= TABLE.y + TABLE.height
-    );
+    const { x: left, y: top, width, height } = this.#table;
+    return x >= left && x <= left + width && y >= top && y <= top + height;
   }
 
   /** @param {"idle"|"valid"|"blocked"} kind */
   setHighlight(kind) {
     const style = STYLE_BY_HIGHLIGHT[kind];
+    const { x, y, width, height, radius } = this.#table;
     this.#frame
       .clear()
-      .roundRect(TABLE.x, TABLE.y, TABLE.width, TABLE.height, TABLE.radius)
+      .roundRect(x, y, width, height, radius)
       .fill({ color: style.fill, alpha: style.fillAlpha })
       .stroke({ width: style.borderWidth, color: style.border });
   }

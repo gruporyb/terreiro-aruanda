@@ -1,10 +1,8 @@
 import { Container, Graphics } from "pixi.js";
-import { CANVAS, COLORS, FONT } from "../config/constants.js";
+import { COLORS, FONT } from "../config/constants.js";
 import { GAME_STATUS } from "./rules/gameLogic.js";
 import { Button } from "./ui/Button.js";
 import { createLabel } from "./ui/createLabel.js";
-
-const CENTER_X = CANVAS.width / 2;
 
 const ENDINGS = {
   [GAME_STATUS.WON]: {
@@ -19,44 +17,62 @@ const ENDINGS = {
 
 /** Tela de fim de partida, com botão de reinício. */
 export class GameOverlay extends Container {
-  #title = createLabel("", {
-    size: 28,
-    bold: true,
-    font: FONT.display,
-    x: CENTER_X,
-    y: 230,
-    anchorX: 0.5,
-    align: "center",
-  });
-  #subtitle = createLabel("", {
-    size: 16,
-    color: COLORS.textBody,
-    x: CENTER_X,
-    y: 282,
-    anchorX: 0.5,
-    align: "center",
-  });
+  #title;
+  #subtitle;
 
-  constructor({ onRestart }) {
+  constructor({ layout, onRestart, onMenu }) {
     super();
     this.visible = false;
 
+    const centerX = layout.width / 2;
+    const top = layout.height * 0.34;
+    const wrapWidth = layout.width - 48;
+
+    this.#title = createLabel("", {
+      size: 28,
+      bold: true,
+      font: FONT.display,
+      x: centerX,
+      y: top,
+      anchorX: 0.5,
+      align: "center",
+      wrapWidth,
+    });
+    this.#subtitle = createLabel("", {
+      size: 17,
+      color: COLORS.textBody,
+      x: centerX,
+      y: top + 90,
+      anchorX: 0.5,
+      align: "center",
+      wrapWidth,
+    });
+
     const dim = new Graphics()
-      .rect(0, 0, CANVAS.width, CANVAS.height)
-      .fill({ color: COLORS.overlay, alpha: 0.9 });
+      .rect(0, 0, layout.width, layout.height)
+      .fill({ color: COLORS.overlay, alpha: 0.92 });
     // Interativo para impedir cliques nos elementos que ficam por baixo.
     dim.eventMode = "static";
 
     const restart = new Button({
       label: "Jogar novamente",
-      x: CENTER_X - 85,
-      y: 330,
-      width: 170,
-      height: 46,
+      x: centerX - 100,
+      y: top + 160,
+      width: 200,
+      height: 52,
       onTap: onRestart,
     });
 
-    this.addChild(dim, this.#title, this.#subtitle, restart);
+    const menu = new Button({
+      label: "Menu",
+      x: centerX - 100,
+      y: top + 224,
+      width: 200,
+      height: 52,
+      onTap: onMenu,
+    });
+
+    this.addChild(dim, this.#title, this.#subtitle, restart, menu);
   }
 
   update(status) {

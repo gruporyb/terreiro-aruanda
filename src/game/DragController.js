@@ -1,5 +1,4 @@
 import { Rectangle } from "pixi.js";
-import { CANVAS } from "../config/constants.js";
 import { CardView } from "./CardView.js";
 
 /**
@@ -15,14 +14,15 @@ export class DragController {
   #view = null;
   #grabOffset = { x: 0, y: 0 };
 
-  constructor(stage, { zone, canStart, onDrop }) {
+  /** @param {{ width: number, height: number }} bounds tamanho lógico do canvas */
+  constructor(stage, { bounds, zone, canStart, onDrop }) {
     this.#zone = zone;
     this.#canStart = canStart;
     this.#onDrop = onDrop;
 
     // O palco precisa ser interativo e cobrir a tela para receber move/up em qualquer ponto.
     stage.eventMode = "static";
-    stage.hitArea = new Rectangle(0, 0, CANVAS.width, CANVAS.height);
+    stage.hitArea = new Rectangle(0, 0, bounds.width, bounds.height);
 
     stage.on("pointerdown", (event) => this.#start(event));
     stage.on("pointermove", (event) => this.#move(event));

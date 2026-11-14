@@ -1,39 +1,48 @@
 import { Container, Graphics } from "pixi.js";
-import { CANVAS, COLORS, END_TURN_BUTTON, HUD, RULES } from "../config/constants.js";
+import { COLORS } from "../config/constants.js";
 import { getDemandAttack } from "./rules/gameLogic.js";
 import { createLabel } from "./ui/createLabel.js";
 
-const CENTER_X = CANVAS.width / 2;
-const RIGHT_EDGE = CANVAS.width - HUD.margin;
-const BUTTON_CENTER_X = END_TURN_BUTTON.x + END_TURN_BUTTON.width / 2;
+const LABEL_SIZE = 16;
 
 /** Painel de informações: Harmonia, demanda, Axé, proteção, giro e mensagens. */
 export class Hud extends Container {
+  #hud;
   #bars = new Graphics();
-  #harmony = createLabel("", { size: 14, bold: true, x: HUD.margin, y: 14 });
-  #demand = createLabel("", { size: 14, bold: true, x: RIGHT_EDGE, y: 14, anchorX: 1 });
-  #axe = createLabel("", { size: 14, bold: true, x: CENTER_X, y: 12, anchorX: 0.5 });
-  #turn = createLabel("", { size: 16, bold: true, x: HUD.margin, y: 140 });
-  #shield = createLabel("", { size: 14, color: COLORS.textBody, x: HUD.margin, y: 168 });
-  #attack = createLabel("", {
-    size: 14,
-    color: COLORS.textBody,
-    x: BUTTON_CENTER_X,
-    y: END_TURN_BUTTON.y - 28,
-    anchorX: 0.5,
-  });
-  #message = createLabel("", {
-    size: 15,
-    color: COLORS.textBody,
-    x: CENTER_X,
-    y: HUD.messageY,
-    anchorX: 0.5,
-    align: "center",
-    wrapWidth: 640,
-  });
+  #harmony;
+  #demand;
+  #axe;
+  #turn;
+  #shield;
+  #attack;
+  #message;
 
-  constructor() {
+  /** @param {object} layout resultado de createLayout() */
+  constructor(layout) {
     super();
+    const { hud, message } = layout;
+    this.#hud = hud;
+
+    const labelAt = (spec, options = {}) =>
+      createLabel("", { size: LABEL_SIZE, x: spec.x, y: spec.y, anchorX: spec.anchorX ?? 0, ...options });
+
+    this.#harmony = labelAt(hud.harmony, { bold: true });
+    this.#demand = labelAt(hud.demand, { bold: true });
+    this.#axe = labelAt(hud.axe, { bold: true, anchorX: 0.5 });
+    this.#turn = labelAt(hud.turn, { bold: true });
+    this.#shield = labelAt(hud.shield, { color: COLORS.textBody });
+    this.#attack = labelAt(hud.attack, { color: COLORS.textBody });
+    this.#message = createLabel("", {
+      size: LABEL_SIZE,
+      color: COLORS.textBody,
+      x: message.x,
+      y: message.y,
+      anchorX: 0.5,
+      anchorY: 0.5,
+      align: "center",
+      wrapWidth: message.wrapWidth,
+    });
+
     this.addChild(
       this.#bars,
       this.#harmony,
@@ -47,7 +56,7 @@ export class Hud extends Container {
   }
 
   update(state) {
-    this.#harmony.text = `Harmonia do terreiro  ${state.harmony}/${RULES.maxHarmony}`;
+    this.#harmony.text = `Harmonia do terreiro  ${state.harmony}/${state.ruleset.maxHarmony}`;
     this.#demand.text = `${state.demand.name}  ${state.demand.health}/${state.demand.maxHealth}`;
     this.#axe.text = `Axé  ${state.axe}/${state.maxAxe}`;
     this.#turn.text = `Giro ${state.turn}`;
@@ -63,30 +72,28 @@ export class Hud extends Container {
   }
 
   #drawBars(state) {
-    const { margin, barWidth, barHeight, barTop } = HUD;
-    const demandX = RIGHT_EDGE - barWidth;
+    const { barHeight, harmony, demand } = this.#hud;
     const bars = this.#bars.clear();
 
-    const drawBar = (x, ratio, color) => {
-      bars.roundRect(x, barTop, barWidth, barHeight, 6).fill({ color: COLORS.track });
+    const drawBar = ({ barX, barY, barWidth }, ratio, color) => {
+      bars.roundRect(barX, barY, barWidth, barHeight, barHeight / 2).fill({ color: COLORS.track });
       if (ratio > 0) {
-        bars.roundRect(x, barTop, barWidth * ratio, barHeight, 6).fill({ color });
+        bars.roundRect(barX, barY, barWidth * ratio, barHeight, barHeight / 2).fill({ color });
       }
     };
-    drawBar(margin, state.harmony / RULES.maxHarmony, COLORS.harmony);
-    drawBar(demandX, state.demand.health / state.demand.maxHealth, COLORS.demand);
+    drawBar(harmony, state.harmony / state.ruleset.maxHarmony, COLORS.harmony);
+    drawBar(demand, state.demand.health / state.demand.maxHealth, COLORS.demand);
 
     this.#drawAxeOrbs(state);
   }
 
   #drawAxeOrbs({ axe, maxAxe }) {
-    const { orbRadius, orbSpacing, orbTop } = HUD;
+    const { orbRadius, orbSpacing, axe: spec } = this.#hud;
     for (let i = 0; i < maxAxe; i++) {
-      const x = CENTER_X + (i - (maxAxe - 1) / 2) * orbSpacing;
-      const isAvailable = i < axe;
+      const x = spec.orbsX + (i - (maxAxe - 1) / 2) * orbSpacing;
       this.#bars
-        .circle(x, orbTop, orbRadius)
-        .fill({ color: isAvailable ? COLORS.axe : COLORS.track })
+        .circle(x, spec.orbsY, orbRadius)
+        .fill({ color: i < axe ? COLORS.axe : COLORS.track })
         .stroke({ width: 2, color: COLORS.axe });
     }
   }

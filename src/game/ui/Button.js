@@ -15,7 +15,7 @@ export class Button extends Container {
     this.position.set(x, y);
     this.#size = { width, height };
     this.#label = createLabel(label, {
-      size: 15,
+      size: 17,
       bold: true,
       color: COLORS.buttonText,
       x: width / 2,
@@ -32,6 +32,10 @@ export class Button extends Container {
     this.on("pointertap", () => this.#isEnabled && onTap());
 
     this.#redraw();
+  }
+
+  setLabel(text) {
+    this.#label.text = text;
   }
 
   setEnabled(isEnabled) {

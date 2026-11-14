@@ -1,6 +1,11 @@
 :root {
   --color-text: #1f2937;
+  --color-muted: #4b5563;
   --color-page: #ffffff;
+  --color-accent: #10b981;
+  --color-accent-dark: #047857;
+  /* Altura reservada para a barra acima do canvas; espelha getChromeHeight() em layout.js. */
+  --chrome: 70px;
 }
 
 * {
@@ -12,38 +17,229 @@ body {
   background: var(--color-page);
   color: var(--color-text);
   font-family: Georgia, serif;
+  -webkit-tap-highlight-color: transparent;
 }
 
+/* ---------- botões ---------- */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px; /* alvo de toque confortável */
+  padding: 0 24px;
+  border: 2px solid var(--color-text);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-family: Arial, sans-serif;
+  font-size: 1.05rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.button:focus-visible,
+.difficulty__option:focus-within {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.button--primary {
+  background: var(--color-text);
+  color: #ffffff;
+}
+
+.button--small {
+  min-height: 40px;
+  padding: 0 14px;
+  font-size: 0.95rem;
+}
+
+.badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: #ffffff;
+  font-size: 0.7rem;
+}
+
+/* ---------- menu ---------- */
+.menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: min(100%, 560px);
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
+
+.menu__title {
+  margin: 0;
+  font-size: 2rem;
+  text-align: center;
+}
+
+.menu__subtitle {
+  margin: -12px 0 0;
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.difficulty {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin: 8px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.difficulty__legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+}
+
+.difficulty__option {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  column-gap: 12px;
+  align-items: center;
+  min-height: 64px;
+  padding: 10px 14px;
+  border: 2px solid #d1d5db;
+  border-radius: 12px;
+  font-family: Arial, sans-serif;
+  cursor: pointer;
+}
+
+.difficulty__option:has(input:checked) {
+  border-color: var(--color-accent);
+  background: #ecfdf5;
+}
+
+.difficulty__option input {
+  grid-row: 1 / span 2;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--color-accent-dark);
+}
+
+.difficulty__name {
+  font-weight: bold;
+}
+
+.difficulty__description {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.menu__actions {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+
+/* ---------- ajuda e legenda ---------- */
+.help {
+  width: 100%;
+  color: var(--color-muted);
+  font-family: Arial, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.help summary {
+  min-height: 40px;
+  padding: 8px 0;
+  cursor: pointer;
+  text-align: center;
+}
+
+.legend {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.legend__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.legend__icon {
+  flex: none;
+  width: 28px;
+  height: 28px;
+}
+
+/* ---------- tela do jogo ---------- */
 .app {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24px;
+  gap: 6px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 8px 8px 16px;
 }
 
-.app__title {
-  margin: 0 0 16px;
-  font-size: 1.75rem;
-  text-align: center;
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: min(100%, 640px);
+  min-height: 40px;
 }
 
+.toolbar__mode {
+  color: var(--color-muted);
+  font-family: Arial, sans-serif;
+  font-size: 0.95rem;
+  font-weight: bold;
+}
+
+/*
+ * O canvas é ampliado/reduzido por CSS para caber na tela mantendo a
+ * proporção: limitado pela largura disponível e pela altura restante.
+ * A declaração com 100vh é a reserva para navegadores sem suporte a dvh.
+ */
 .game-canvas {
-  max-width: 100%;
+  width: min(100%, calc((100vh - var(--chrome)) * var(--aspect)), 1200px);
+  width: min(100%, calc((100dvh - var(--chrome)) * var(--aspect)), 1200px);
+  aspect-ratio: var(--aspect);
   overflow: hidden;
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
+/* !important: o Pixi grava largura/altura em px no canvas; aqui elas seguem o contêiner. */
 .game-canvas canvas {
   display: block;
-  max-width: 100%;
+  width: 100% !important;
+  height: 100% !important;
   touch-action: none; /* evita rolar a página enquanto arrasta no celular */
 }
 
-.app__hint {
-  max-width: 640px;
-  margin: 16px 0 0;
-  color: #4b5563;
-  line-height: 1.5;
-  text-align: center;
+/* Celular deitado: barra mais baixa e mais altura para o jogo. */
+@media (max-height: 500px) {
+  :root {
+    --chrome: 50px;
+  }
+  .app {
+    padding-top: 4px;
+    gap: 2px;
+  }
+  .toolbar {
+    min-height: 36px;
+  }
 }

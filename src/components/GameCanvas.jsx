@@ -1,17 +1,40 @@
-import { useRef } from "react";
-import { CANVAS } from "../config/constants.js";
-import { terreiroSceneLoader } from "../game/TerreiroScene.js";
+import { useEffect, useMemo, useRef } from "react";
+import { createSceneLoader } from "../game/TerreiroScene.js";
+import { useCanvasSize } from "../hooks/useCanvasSize.js";
 import { usePixiApp } from "../hooks/usePixiApp.js";
 
-export default function GameCanvas() {
+/**
+ * Contêiner do canvas do jogo. O canvas é recriado quando o tamanho lógico
+ * muda (ex.: girar o aparelho); a `session` mantém a partida.
+ */
+export default function GameCanvas({ session, onMenu, onTutorialFinish }) {
   const containerRef = useRef(null);
-  usePixiApp(containerRef, terreiroSceneLoader);
+  const size = useCanvasSize();
+
+  // Callbacks estáveis: o loader não pode mudar a cada render (recriaria o canvas).
+  const latest = useRef({ onMenu, onTutorialFinish });
+  useEffect(() => {
+    latest.current = { onMenu, onTutorialFinish };
+  });
+  const callbacks = useMemo(
+    () => ({
+      onMenu: () => latest.current.onMenu(),
+      onTutorialFinish: () => latest.current.onTutorialFinish(),
+    }),
+    [],
+  );
+
+  const loader = useMemo(
+    () => createSceneLoader(size, session, callbacks),
+    [size, session, callbacks],
+  );
+  usePixiApp(containerRef, loader);
 
   return (
     <div
       ref={containerRef}
       className="game-canvas"
-      style={{ width: CANVAS.width, height: CANVAS.height }}
+      style={{ "--aspect": size.width / size.height }}
       aria-label="Mesa do jogo Terreiro de Aruanda"
     />
   );

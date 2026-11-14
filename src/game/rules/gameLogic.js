@@ -1,6 +1,8 @@
 import { RULES } from "../../config/constants.js";
-import { CARD_CATALOG, PASSE } from "../../data/cardCatalog.js";
+import { PASSE } from "../../data/cardCatalog.js";
+import { DEFAULT_DIFFICULTY, DIFFICULTIES } from "../../data/difficulties.js";
 import { shuffle } from "../../utils/random.js";
+import { buildDeck } from "./deck.js";
 
 /**
  * Regras do jogo como funções puras: (estado, ação) -> novo estado.
@@ -14,17 +16,6 @@ export const GAME_STATUS = Object.freeze({
 });
 
 const INITIAL_MESSAGE = "Arraste uma carta até a gira para chamar a entidade.";
-
-function buildDeck(rng) {
-  const cards = CARD_CATALOG.flatMap((template) =>
-    Array.from({ length: RULES.copiesPerCard }, (_, copy) => ({
-      ...template,
-      id: `${template.id}#${copy + 1}`,
-      templateId: template.id,
-    })),
-  );
-  return shuffle(cards, rng);
-}
 
 /** Compra até `count` cartas, respeitando o limite de mão e reembaralhando o descarte. */
 export function drawCards(state, count, rng = Math.random) {
@@ -46,22 +37,31 @@ export function drawCards(state, count, rng = Math.random) {
 const drawUpToHandSize = (state, rng) =>
   drawCards(state, Math.max(0, RULES.handSize - state.hand.length), rng);
 
-export function createGame(rng = Math.random) {
+/**
+ * @param {() => number} [rng]
+ * @param {{ ruleset?: object, deck?: object[] | null }} [options]
+ *   `ruleset`: regras da dificuldade; `deck`: baralho em ordem fixa (tutorial)
+ */
+export function createGame(
+  rng = Math.random,
+  { ruleset = DIFFICULTIES[DEFAULT_DIFFICULTY].ruleset, deck = null } = {},
+) {
   const initialState = {
+    ruleset,
     status: GAME_STATUS.PLAYING,
     turn: 1,
-    harmony: RULES.maxHarmony,
+    harmony: ruleset.maxHarmony,
     shield: 0,
     weakened: 0,
-    axe: RULES.startingAxe,
-    maxAxe: RULES.startingAxe,
+    axe: ruleset.startingAxe,
+    maxAxe: ruleset.startingAxe,
     demand: {
-      name: RULES.demand.name,
-      health: RULES.demand.health,
-      maxHealth: RULES.demand.health,
+      name: ruleset.demand.name,
+      health: ruleset.demand.health,
+      maxHealth: ruleset.demand.health,
     },
     hand: [],
-    drawPile: buildDeck(rng),
+    drawPile: deck ?? buildDeck(rng),
     discardPile: [],
     message: INITIAL_MESSAGE,
   };
@@ -70,7 +70,7 @@ export function createGame(rng = Math.random) {
 
 /** Dano que a demanda causará ao fim do giro atual (antes da proteção). */
 export function getDemandAttack(state) {
-  const { baseAttack, attackGrowth } = RULES.demand;
+  const { baseAttack, attackGrowth } = state.ruleset.demand;
   const attack = baseAttack + attackGrowth * (state.turn - 1) - state.weakened;
   return Math.max(0, attack);
 }
@@ -94,7 +94,7 @@ export function canPlayCard(state, cardId) {
 function applyPasse(state, { type, amount }, rng) {
   switch (type) {
     case PASSE.CURA:
-      return { ...state, harmony: Math.min(RULES.maxHarmony, state.harmony + amount) };
+      return { ...state, harmony: Math.min(state.ruleset.maxHarmony, state.harmony + amount) };
     case PASSE.GUIA:
       return drawCards(state, amount, rng);
     case PASSE.DESCARREGO:

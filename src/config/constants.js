@@ -1,10 +1,6 @@
 /** Configuração do jogo. Nenhum "número mágico" fora deste arquivo. */
 
-export const CANVAS = Object.freeze({
-  width: 800,
-  height: 600,
-  background: 0xf4f5f7,
-});
+export const CANVAS = Object.freeze({ background: 0xf4f5f7 });
 
 export const FONT = Object.freeze({
   display: "Georgia, serif",
@@ -37,53 +33,17 @@ export const BORDER_WIDTH = Object.freeze({ idle: 2, active: 3 });
 
 export const CARD = Object.freeze({
   width: 136,
-  height: 210,
+  height: 216,
   radius: 10,
   padding: 10,
-  badgeRadius: 11,
-  /** Janela da ilustração da entidade (a largura é a da carta menos o padding). */
-  art: Object.freeze({ top: 36, height: 70, radius: 6 }),
-  titleTop: 110,
-  dividerY: 158,
-  statsTop: 164,
-});
-
-/** Área onde as cartas são soltas para serem jogadas. */
-export const TABLE = Object.freeze({
-  x: 170,
-  y: 120,
-  width: 460,
-  height: 200,
-  radius: 16,
-});
-
-export const HAND = Object.freeze({
-  centerX: 400,
-  baseY: 480,
-  maxWidth: 700,
-  maxStep: 130,
-  arcDrop: 10,
-  maxTilt: 0.1,
-  /** De onde as cartas "saem" ao serem compradas (fora da tela, à direita). */
-  spawn: Object.freeze({ x: 900, y: 540 }),
-});
-
-export const HUD = Object.freeze({
-  margin: 24,
-  barWidth: 220,
-  barHeight: 12,
-  barTop: 40,
-  orbRadius: 8,
-  orbSpacing: 24,
-  orbTop: 56,
-  messageY: 338,
-});
-
-export const END_TURN_BUTTON = Object.freeze({
-  x: 650,
-  y: 198,
-  width: 130,
-  height: 44,
+  badgeRadius: 13,
+  /** Janela da ilustração (a largura é a da carta menos o padding). */
+  art: Object.freeze({ top: 40, height: 64, radius: 6 }),
+  titleTop: 108,
+  dividerY: 146,
+  statsTop: 152,
+  /** Colunas de atributos: ícone em cima, valor embaixo. */
+  stat: Object.freeze({ iconSize: 22, valueSize: 18, valueGap: 4, inactiveAlpha: 0.35 }),
 });
 
 export const Z_INDEX = Object.freeze({ hovered: 100, leaving: 500, dragging: 1000 });
@@ -102,17 +62,10 @@ export const MOTION = Object.freeze({
   fadedAlpha: 0.02,
 });
 
+/** Regras comuns a todas as dificuldades (as que variam ficam em data/difficulties.js). */
 export const RULES = Object.freeze({
-  maxHarmony: 30,
   handSize: 5,
   handLimit: 7,
-  startingAxe: 3,
   maxAxe: 6,
   copiesPerCard: 2,
-  demand: Object.freeze({
-    name: "Demanda pesada",
-    health: 60,
-    baseAttack: 7,
-    attackGrowth: 2,
-  }),
 });
