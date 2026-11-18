@@ -3,6 +3,7 @@ import { PASSE } from "../../data/cardCatalog.js";
 import { DEFAULT_DIFFICULTY, DIFFICULTIES } from "../../data/difficulties.js";
 import { shuffle } from "../../utils/random.js";
 import { buildDeck } from "./deck.js";
+import { MATCHUP, MATCHUP_LABEL, effectiveDamage, getMatchup, pickDemandElement } from "./elements.js";
 
 /**
  * Regras do jogo como funções puras: (estado, ação) -> novo estado.
@@ -39,13 +40,17 @@ const drawUpToHandSize = (state, rng) =>
 
 /**
  * @param {() => number} [rng]
- * @param {{ ruleset?: object, deck?: object[] | null }} [options]
- *   `ruleset`: regras da dificuldade; `deck`: baralho em ordem fixa (tutorial)
+ * @param {{ ruleset?: object, deck?: object[] | null, demandElement?: string | null }} [options]
+ *   `ruleset`: regras da dificuldade; `deck`: baralho em ordem fixa (tutorial);
+ *   `demandElement`: elemento da demanda (se omitido, sorteado)
  */
 export function createGame(
   rng = Math.random,
-  { ruleset = DIFFICULTIES[DEFAULT_DIFFICULTY].ruleset, deck = null } = {},
+  { ruleset = DIFFICULTIES[DEFAULT_DIFFICULTY].ruleset, deck = null, demandElement = null } = {},
 ) {
+  const drawPile = deck ?? buildDeck(rng);
+  const element = demandElement ?? pickDemandElement(rng);
+
   const initialState = {
     ruleset,
     status: GAME_STATUS.PLAYING,
@@ -57,11 +62,12 @@ export function createGame(
     maxAxe: ruleset.startingAxe,
     demand: {
       name: ruleset.demand.name,
+      element,
       health: ruleset.demand.health,
       maxHealth: ruleset.demand.health,
     },
     hand: [],
-    drawPile: deck ?? buildDeck(rng),
+    drawPile,
     discardPile: [],
     message: INITIAL_MESSAGE,
   };
@@ -73,6 +79,14 @@ export function getDemandAttack(state) {
   const { baseAttack, attackGrowth } = state.ruleset.demand;
   const attack = baseAttack + attackGrowth * (state.turn - 1) - state.weakened;
   return Math.max(0, attack);
+}
+
+/** O que acontecerá se o giro terminar agora: ataque, quanto a proteção bloqueia e o dano. */
+export function previewTurnEnd(state) {
+  const attack = getDemandAttack(state);
+  const blocked = Math.min(state.shield, attack);
+  const damage = attack - blocked;
+  return { attack, blocked, damage, isDefeat: state.harmony - damage <= 0 };
 }
 
 /** @returns {{ ok: true } | { ok: false, reason: string }} */
@@ -110,9 +124,12 @@ const PASSE_MESSAGES = {
   [PASSE.DESCARREGO]: (amount) => `descarrego -${amount} no ataque`,
 };
 
-function describePlay(card) {
+function describePlay(card, damage, matchup) {
   const parts = [];
-  if (card.power > 0) parts.push(`-${card.power} na demanda`);
+  if (card.power > 0) {
+    const note = matchup === MATCHUP.NEUTRAL ? "" : ` (${MATCHUP_LABEL[matchup]})`;
+    parts.push(`-${damage} na demanda${note}`);
+  }
   if (card.defense > 0) parts.push(`+${card.defense} de proteção`);
   const describePasse = PASSE_MESSAGES[card.passe.type];
   if (describePasse) parts.push(describePasse(card.passe.amount));
@@ -123,6 +140,9 @@ export function playCard(state, cardId, rng = Math.random) {
   if (!canPlayCard(state, cardId).ok) return state;
 
   const card = state.hand.find((c) => c.id === cardId);
+  const damage = effectiveDamage(card.power, card.element, state.demand.element);
+  const matchup = getMatchup(card.element, state.demand.element);
+
   const afterCost = {
     ...state,
     axe: state.axe - card.cost,
@@ -131,7 +151,7 @@ export function playCard(state, cardId, rng = Math.random) {
     shield: state.shield + card.defense,
     demand: {
       ...state.demand,
-      health: Math.max(0, state.demand.health - card.power),
+      health: Math.max(0, state.demand.health - damage),
     },
   };
   const next = applyPasse(afterCost, card.passe, rng);
@@ -143,15 +163,13 @@ export function playCard(state, cardId, rng = Math.random) {
       message: `${card.name} desfez a demanda!`,
     };
   }
-  return { ...next, message: describePlay(card) };
+  return { ...next, message: describePlay(card, damage, matchup) };
 }
 
 export function endTurn(state, rng = Math.random) {
   if (state.status !== GAME_STATUS.PLAYING) return state;
 
-  const attack = getDemandAttack(state);
-  const blocked = Math.min(state.shield, attack);
-  const damage = attack - blocked;
+  const { attack, blocked, damage } = previewTurnEnd(state);
   const harmony = Math.max(0, state.harmony - damage);
 
   if (harmony === 0) {

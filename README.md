@@ -78,40 +78,78 @@ passe), com o valor em tamanho grande. A legenda fica em "Como jogar".
 - **Toque:** arrastar bloqueia a rolagem apenas sobre o canvas
   (`touch-action: none`); botões têm pelo menos 48 px de altura lógica.
 
-## Tutorial e dificuldade
+## Elementos da demanda
 
-**Menu inicial:** escolha a dificuldade (Fácil, Normal ou Difícil), toque em
-*Jogar* ou faça o *Tutorial*. A dificuldade e a conclusão do tutorial ficam
-salvas no navegador (`localStorage`, com reserva se estiver indisponível).
+Ao iniciar a partida, a demanda recebe um elemento sorteado: **Fogo, Ar, Terra
+ou Água** (aparece ao lado do nome, com a lista de quem ela teme e resiste).
+
+- Contra uma demanda de **Fogo**: entidade de **Água** causa **+30%** de dano;
+  entidade de **Terra** causa **metade**. Os demais elementos causam dano normal.
+- Em todos os casos o resultado é **arredondado para baixo** (ex.: Água com 5 de
+  ataque causa 6; Terra com 5 causa 2; Terra com 1 causa 0).
+- O elemento só altera o **dano**; defesa e passe não mudam.
+- As cartas mostram um selo **+30%** (verde) ou **½** (vermelho) conforme a
+  demanda atual.
+
+Para as outras demandas, o mesmo ciclo vale: **Água vence Fogo, Fogo vence
+Terra, Terra vence Ar, Ar vence Água**. Quem vence a demanda causa +30%; quem a
+demanda vence causa metade. Entidades de **Mata** são neutras. Tudo isso fica em
+`game/rules/elements.js`.
+
+## Cartas
+
+São 20 entidades (2 cópias de cada no baralho): 8 novas, incluindo Caboclo Cobra
+Coral, Zé Pelintra, Pombagira Sete Saias, Vovó Cambinda, Caboclo Arranca-Toco,
+Erê Doum, Seu Marujo e Cigana Carmencita. O catálogo fica em
+`data/cardCatalog.js` e os prompts de arte em `scripts/artPrompts.mjs`.
+
+## Sacramentos e Demanda suprema
+
+Cada **vitória** (não conta o tutorial) rende **1 sacramento**. Com **5**,
+libera-se a **Demanda suprema**, um nível acima do Difícil e com chances bem
+baixas de vitória. Ela continua liberada depois. O progresso fica salvo no
+navegador (`localStorage`). Lógica pura em `game/progress.js`.
+
+## Dificuldades
 
 | Nível | Harmonia | Vida da demanda | Ataque inicial | Cresce por giro | Vitórias de um jogador automático* |
 |---|---|---|---|---|---|
-| Fácil | 32 | 55 | 7 | +2 | ~91% |
-| Normal | 30 | 60 | 7 | +2 | ~65% |
-| Difícil | 28 | 64 | 7 | +2 | ~30–35% |
+| Fácil | 32 | 50 | 6 | +2 | ~94% |
+| Normal | 30 | 52 | 7 | +2 | ~61% |
+| Difícil | 28 | 56 | 7 | +2 | ~31% |
+| Demanda suprema | 26 | 58 | 8 | +2 | ~3% |
 
-\* Simulação de 1.000 partidas com um jogador que sempre joga a carta de maior valor por Axé;
-pessoas costumam jogar melhor. Os números ficam em `data/difficulties.js`.
+\* Simulação de 1.500 partidas com um jogador que sempre joga a carta de maior
+valor por Axé, já considerando o elemento; pessoas costumam jogar melhor. Os
+números ficam em `data/difficulties.js`.
 
-**Tutorial guiado (9 passos)**, jogado no próprio tabuleiro com uma mão fixa:
-objetivo, Axé, ícones, jogar uma carta de ataque, defesa, encerrar o giro e
-passe de cura. Contornos pulsantes mostram o que olhar ou tocar; nos passos de
-ação só a jogada esperada é aceita (as outras mostram uma dica).
-Os textos e a ordem ficam em `game/tutorial/tutorialSteps.js`.
+## Efeitos e sons
 
-### Estrutura nova
+- **Fim de cada giro** (sequência de ~1 s, com a entrada travada): a demanda
+  ataca (clarão e partículas), a proteção reage ("Bloqueou N"), o dano atinge
+  a Harmonia (tremor da tela), e um novo giro começa ("Giro N" e faíscas no Axé).
+- Também há efeitos ao **jogar uma carta** (cor do elemento, dano, +30%/½, cura)
+  e **confete** na vitória. Código em `game/effects/` (partículas e agendamento
+  são puros e testados).
+- **Sons sintetizados** (Web Audio, sem arquivos): pegar carta, jogar, elemento
+  forte/fraco, ataque, bloqueio, cura, compra, novo giro, vitória, derrota,
+  liberação da Demanda suprema e cliques. Botão **Som** liga/desliga (salvo).
+  Definições em `game/audio/soundDefs.js`.
 
-```
-src/
-├── data/difficulties.js             # rulesets dos níveis (e o do tutorial)
-├── game/
-│   ├── session.js                   # modo, dificuldade, estado e passo do tutorial
-│   ├── rules/deck.js                # baralho aleatório e de ordem fixa
-│   └── tutorial/
-│       ├── tutorialSteps.js         # roteiro + verificação de ações (puro)
-│       ├── tutorialGame.js          # partida de treino com mão fixa
-│       ├── TutorialPanel.js         # caixa de dicas
-│       └── TutorialHighlight.js     # contornos pulsantes
-├── screens/MainMenu.jsx, GameScreen.jsx
-└── hooks/usePersistentState.js
-```
+## Anúncios
+
+Colunas de anúncio **nas laterais** em telas largas (>= 1100 px) e uma faixa
+**só no rodapé** em celulares e tablets. O canvas desconta esse espaço, então
+nada cobre o jogo. Por padrão aparecem espaços reservados "Publicidade"; para
+ativar o Google AdSense, preencha `client` e os `slots` em `config/ads.js`.
+Para desligar tudo, `enabled: false`.
+
+> Antes de publicar com anúncios personalizados, é preciso um aviso/consentimento
+> de cookies (LGPD) e seguir as políticas do AdSense. Isso não está incluído.
+
+## Tutorial guiado (10 passos)
+
+Jogado no próprio tabuleiro, com mão fixa e demanda de Fogo: objetivo, Axé,
+ícones, jogar uma carta, **elementos**, defesa, encerrar o giro e passe de
+cura. Contornos pulsantes mostram o que olhar ou tocar; nos passos de ação só a
+jogada esperada é aceita. Texto e ordem em `game/tutorial/tutorialSteps.js`.

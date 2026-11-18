@@ -4,8 +4,24 @@
   --color-page: #ffffff;
   --color-accent: #10b981;
   --color-accent-dark: #047857;
-  /* Altura reservada para a barra acima do canvas; espelha getChromeHeight() em layout.js. */
-  --chrome: 70px;
+  /* Espaço fora do canvas; espelha getChromeSize() em config/layout.js e AD_LAYOUT em config/ads.js. */
+  --toolbar: 70px;
+  --footer-ad: 50px;
+  --rail-width: 160px;
+  --chrome: calc(var(--toolbar) + var(--footer-ad));
+}
+
+@media (max-height: 500px) {
+  :root {
+    --toolbar: 50px;
+  }
+}
+
+/* Telas largas: anúncios nas laterais em vez do rodapé. */
+@media (min-width: 1100px) {
+  :root {
+    --footer-ad: 0px;
+  }
 }
 
 * {
@@ -232,9 +248,6 @@ body {
 
 /* Celular deitado: barra mais baixa e mais altura para o jogo. */
 @media (max-height: 500px) {
-  :root {
-    --chrome: 50px;
-  }
   .app {
     padding-top: 4px;
     gap: 2px;
@@ -242,4 +255,161 @@ body {
   .toolbar {
     min-height: 36px;
   }
+}
+
+/* ---------- moldura do site e anúncios ---------- */
+.site {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: var(--footer-ad);
+}
+
+.site--no-ads {
+  --footer-ad: 0px;
+}
+
+.site__main {
+  min-width: 0;
+}
+
+.ad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: #9ca3af;
+  font-family: Arial, sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ad__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: 1px dashed #d1d5db;
+  border-radius: 6px;
+  background: #f9fafb;
+  font-size: 0.75rem;
+}
+
+.ad__unit {
+  width: 100%;
+  height: 100%;
+}
+
+/* Laterais: escondidas em celulares e tablets. */
+.ad--left,
+.ad--right {
+  display: none;
+}
+
+/* Rodapé fixo: só em celulares e tablets. */
+.ad--footer {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  height: var(--footer-ad);
+  padding: 2px 0;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+}
+
+.ad--footer .ad__placeholder {
+  width: min(320px, 100%);
+}
+
+.site--no-ads .ad {
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .site:not(.site--no-ads) {
+    display: grid;
+    grid-template-columns: var(--rail-width) minmax(0, 1fr) var(--rail-width);
+    column-gap: 16px;
+    padding: 0 16px;
+  }
+
+  .ad--left,
+  .ad--right {
+    display: flex;
+    position: sticky;
+    top: 16px;
+    align-self: start;
+    height: 600px;
+    margin-top: 16px;
+  }
+
+  .ad--footer {
+    display: none;
+  }
+}
+
+/* ---------- sacramentos ---------- */
+.sacramentos {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: 100%;
+  font-family: Arial, sans-serif;
+}
+
+.sacramentos__dots {
+  display: flex;
+  gap: 8px;
+}
+
+.dot {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-accent-dark);
+  border-radius: 50%;
+}
+
+.dot--full {
+  background: var(--color-accent);
+}
+
+.sacramentos__text {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.difficulty__option--locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.badge--muted {
+  margin-left: 8px;
+  background: #9ca3af;
+}
+
+.menu__top {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+/* ---------- guia de elementos ---------- */
+.element-guide table {
+  width: 100%;
+  margin-top: 8px;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.element-guide th,
+.element-guide td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
 }

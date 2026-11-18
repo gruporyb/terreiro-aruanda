@@ -1,12 +1,13 @@
 import GameCanvas from "../components/GameCanvas.jsx";
+import SoundToggle from "../components/SoundToggle.jsx";
 import { DIFFICULTIES } from "../data/difficulties.js";
 import { isTutorialSession } from "../game/session.js";
 
-/** Tela da partida: barra superior (menu e modo) e o canvas do jogo. */
-export default function GameScreen({ session, onMenu, onTutorialFinish }) {
+/** Tela da partida: barra superior (menu, modo e som) e o canvas do jogo. */
+export default function GameScreen({ session, isMuted, onToggleMute, onMenu, onTutorialFinish, onVictory }) {
   const modeLabel = isTutorialSession(session)
     ? "Tutorial"
-    : `Dificuldade: ${DIFFICULTIES[session.difficulty].label}`;
+    : DIFFICULTIES[session.difficulty].label;
 
   return (
     <div className="app">
@@ -15,8 +16,14 @@ export default function GameScreen({ session, onMenu, onTutorialFinish }) {
           ← Menu
         </button>
         <span className="toolbar__mode">{modeLabel}</span>
+        <SoundToggle isMuted={isMuted} onToggle={onToggleMute} />
       </header>
-      <GameCanvas session={session} onMenu={onMenu} onTutorialFinish={onTutorialFinish} />
+      <GameCanvas
+        session={session}
+        onMenu={onMenu}
+        onTutorialFinish={onTutorialFinish}
+        onVictory={onVictory}
+      />
     </div>
   );
 }

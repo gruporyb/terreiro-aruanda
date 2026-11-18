@@ -7,19 +7,20 @@ import { usePixiApp } from "../hooks/usePixiApp.js";
  * Contêiner do canvas do jogo. O canvas é recriado quando o tamanho lógico
  * muda (ex.: girar o aparelho); a `session` mantém a partida.
  */
-export default function GameCanvas({ session, onMenu, onTutorialFinish }) {
+export default function GameCanvas({ session, onMenu, onTutorialFinish, onVictory }) {
   const containerRef = useRef(null);
   const size = useCanvasSize();
 
   // Callbacks estáveis: o loader não pode mudar a cada render (recriaria o canvas).
-  const latest = useRef({ onMenu, onTutorialFinish });
+  const latest = useRef({ onMenu, onTutorialFinish, onVictory });
   useEffect(() => {
-    latest.current = { onMenu, onTutorialFinish };
+    latest.current = { onMenu, onTutorialFinish, onVictory };
   });
   const callbacks = useMemo(
     () => ({
       onMenu: () => latest.current.onMenu(),
       onTutorialFinish: () => latest.current.onTutorialFinish(),
+      onVictory: () => latest.current.onVictory(),
     }),
     [],
   );

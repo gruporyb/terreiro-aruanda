@@ -13,6 +13,7 @@ export const createSession = ({ mode = SESSION_MODE.GAME, difficulty = DEFAULT_D
   difficulty,
   state: null,
   tutorialStep: 0,
+  reward: null, // recompensa da vitória atual (sacramento), para exibir na tela final
 });
 
 export const isTutorialSession = (session) => session.mode === SESSION_MODE.TUTORIAL;

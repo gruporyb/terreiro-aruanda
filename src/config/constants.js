@@ -20,6 +20,8 @@ export const COLORS = Object.freeze({
   harmony: 0x10b981,
   demand: 0xef4444,
   axe: 0xf59e0b,
+  shield: 0x2563eb,
+  good: 0x16a34a,
   badge: 0x1f2937,
   badgeDisabled: 0x9ca3af,
   button: 0x1f2937,

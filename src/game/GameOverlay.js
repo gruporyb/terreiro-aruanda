@@ -19,6 +19,7 @@ const ENDINGS = {
 export class GameOverlay extends Container {
   #title;
   #subtitle;
+  #reward;
 
   constructor({ layout, onRestart, onMenu }) {
     super();
@@ -48,6 +49,17 @@ export class GameOverlay extends Container {
       wrapWidth,
     });
 
+    this.#reward = createLabel("", {
+      size: 17,
+      bold: true,
+      color: COLORS.good,
+      x: centerX,
+      y: top + 142,
+      anchorX: 0.5,
+      align: "center",
+      wrapWidth,
+    });
+
     const dim = new Graphics()
       .rect(0, 0, layout.width, layout.height)
       .fill({ color: COLORS.overlay, alpha: 0.92 });
@@ -57,7 +69,7 @@ export class GameOverlay extends Container {
     const restart = new Button({
       label: "Jogar novamente",
       x: centerX - 100,
-      y: top + 160,
+      y: top + 196,
       width: 200,
       height: 52,
       onTap: onRestart,
@@ -66,20 +78,22 @@ export class GameOverlay extends Container {
     const menu = new Button({
       label: "Menu",
       x: centerX - 100,
-      y: top + 224,
+      y: top + 260,
       width: 200,
       height: 52,
       onTap: onMenu,
     });
 
-    this.addChild(dim, this.#title, this.#subtitle, restart, menu);
+    this.addChild(dim, this.#title, this.#subtitle, this.#reward, restart, menu);
   }
 
-  update(status) {
+  /** @param {string | null} rewardText texto da recompensa (só na vitória) */
+  update(status, rewardText = null) {
     const ending = ENDINGS[status];
     this.visible = Boolean(ending);
     if (!ending) return;
     this.#title.text = ending.title;
     this.#subtitle.text = ending.subtitle;
+    this.#reward.text = status === GAME_STATUS.WON && rewardText ? rewardText : "";
   }
 }

@@ -51,6 +51,11 @@ export class Hand extends Container {
     return [...this.#views.values()].find((view) => view.card.templateId === templateId) ?? null;
   }
 
+  /** Atualiza os selos de elemento (+30% / ½) conforme a demanda atual. */
+  setMatchup(getMatchupOf) {
+    for (const view of this.#views.values()) view.setMatchup(getMatchupOf(view.card));
+  }
+
   /** Atualiza quais cartas podem ser jogadas (ex.: Axé suficiente). */
   setPlayable(isPlayable) {
     for (const view of this.#views.values()) {

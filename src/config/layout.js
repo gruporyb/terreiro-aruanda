@@ -1,4 +1,5 @@
 import { clamp } from "../utils/math.js";
+import { AD_LAYOUT } from "./ads.js";
 
 /**
  * Layout responsivo. O tamanho lógico do canvas depende do formato da tela:
@@ -19,8 +20,23 @@ const TUTORIAL_PANEL_HEIGHT = 140;
 const HAND_STYLE = Object.freeze({ maxStep: 130, arcDrop: 10, maxTilt: 0.1 });
 const HUD_STYLE = Object.freeze({ barHeight: 14, orbRadius: 9, orbSpacing: 26 });
 
-/** Altura (px CSS) reservada para a barra acima do canvas; espelha o CSS. */
-export const getChromeHeight = (viewportHeight) => (viewportHeight <= 500 ? 50 : 70);
+const TOOLBAR_HEIGHT = Object.freeze({ tall: 70, short: 50 });
+
+/**
+ * Espaço (px CSS) que NÃO é do canvas: barra superior e anúncios. Espelha o CSS.
+ *  - telas largas: colunas de anúncio dos dois lados (tiram largura);
+ *  - demais telas: faixa de anúncio fixa no rodapé (tira altura).
+ */
+export function getChromeSize({ width, height }, adsEnabled = true) {
+  const hasRails = adsEnabled && width >= AD_LAYOUT.railBreakpoint;
+  const hasFooter = adsEnabled && !hasRails;
+  const toolbar = height <= 500 ? TOOLBAR_HEIGHT.short : TOOLBAR_HEIGHT.tall;
+
+  return {
+    width: hasRails ? 2 * (AD_LAYOUT.railWidth + AD_LAYOUT.railGap) + 2 * AD_LAYOUT.pagePadding : 0,
+    height: toolbar + (hasFooter ? AD_LAYOUT.footerHeight : 0),
+  };
+}
 
 const roundToStep = (value) => Math.round(value / SIZE_STEP) * SIZE_STEP;
 
@@ -62,7 +78,15 @@ function buildLandscape({ width, height }) {
   const hud = {
     ...HUD_STYLE,
     harmony: { x: MARGIN, y: 10, barX: MARGIN, barY: 38, barWidth },
-    demand: { x: width - MARGIN, y: 10, anchorX: 1, barX: width - MARGIN - barWidth, barY: 38, barWidth },
+    demand: {
+      x: width - MARGIN,
+      y: 10,
+      anchorX: 1,
+      barX: width - MARGIN - barWidth,
+      barY: 38,
+      barWidth,
+      matchup: { x: width - MARGIN, y: 58, anchorX: 1 },
+    },
     axe: { x: width / 2, y: 8, orbsX: width / 2, orbsY: 50 },
     turn: { x: MARGIN, y: table.y },
     shield: { x: MARGIN, y: table.y + 28 },
@@ -80,7 +104,14 @@ function buildPortrait({ width, height }) {
   const hud = {
     ...HUD_STYLE,
     harmony: { x: MARGIN, y: 10, barX: MARGIN, barY: 34, barWidth: contentWidth },
-    demand: { x: MARGIN, y: 56, barX: MARGIN, barY: 80, barWidth: contentWidth },
+    demand: {
+      x: MARGIN,
+      y: 56,
+      barX: MARGIN,
+      barY: 80,
+      barWidth: contentWidth,
+      matchup: { x: width - MARGIN, y: 59, anchorX: 1 },
+    },
     axe: { x: width / 2, y: 98, orbsX: width / 2, orbsY: 132 },
     turn: { x: MARGIN, y: 152 },
     shield: { x: width / 2, y: 152, anchorX: 0.5 },

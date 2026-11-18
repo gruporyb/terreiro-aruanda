@@ -6,11 +6,13 @@ import { CardMotion } from "./CardMotion.js";
 import { getCardStats } from "./cardStats.js";
 import { drawCardBackground } from "./drawCardBackground.js";
 import { ELEMENT_COLORS } from "./elementColors.js";
+import { MATCHUP, MATCHUP_LABEL } from "./rules/elements.js";
 import { createIcon } from "./ui/createIcon.js";
 import { createLabel } from "./ui/createLabel.js";
 
 const BADGE_CENTER = CARD.padding + CARD.badgeRadius;
 const CONTENT_WIDTH = CARD.width - CARD.padding * 2;
+const CHIP = Object.freeze({ width: 46, height: 20, margin: 4 });
 
 /** Representação visual e interativa de uma carta. Não conhece as regras do jogo. */
 export class CardView extends Container {
@@ -31,6 +33,10 @@ export class CardView extends Container {
   #isDragging = false;
   #isDismissing = false;
   #order = 0;
+  #matchup = MATCHUP.NEUTRAL;
+  #chip = new Container();
+  #chipBackground = new Graphics();
+  #chipLabel = createLabel("", { size: 12, bold: true, color: COLORS.buttonText, x: CHIP.width / 2, y: CHIP.height / 2, anchorX: 0.5, anchorY: 0.5 });
 
   /**
    * @param {object} card dados da carta
@@ -81,6 +87,22 @@ export class CardView extends Container {
     this.#motion.setSlot(slot);
     this.#order = order;
     this.#updateZIndex();
+  }
+
+  /**
+   * Selo no canto da ilustração: "+30%" (elemento forte contra a demanda) ou
+   * "½" (fraco). Sem selo quando o confronto é neutro.
+   */
+  setMatchup(matchup) {
+    if (matchup === this.#matchup) return;
+    this.#matchup = matchup;
+
+    this.#chip.visible = matchup !== MATCHUP.NEUTRAL;
+    if (!this.#chip.visible) return;
+
+    const color = matchup === MATCHUP.STRONG ? COLORS.good : COLORS.borderBlocked;
+    this.#chipBackground.clear().roundRect(0, 0, CHIP.width, CHIP.height, CHIP.height / 2).fill({ color });
+    this.#chipLabel.text = MATCHUP_LABEL[matchup];
   }
 
   setPlayable(isPlayable) {
@@ -171,6 +193,7 @@ export class CardView extends Container {
     this.addChild(
       this.#background,
       this.#createArt(),
+      this.#createChip(),
       this.#costBadge,
       costText,
       elementLabel,
@@ -178,6 +201,16 @@ export class CardView extends Container {
       divider,
       this.#createStats(),
     );
+  }
+
+  #createChip() {
+    this.#chip.visible = false;
+    this.#chip.position.set(
+      CARD.padding + CONTENT_WIDTH - CHIP.width - CHIP.margin,
+      CARD.art.top + CHIP.margin,
+    );
+    this.#chip.addChild(this.#chipBackground, this.#chipLabel);
+    return this.#chip;
   }
 
   /** Atributos como colunas: ícone em cima, valor embaixo (ataque, defesa, passe). */

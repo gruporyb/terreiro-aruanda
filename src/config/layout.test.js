@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CARD, RULES } from "./constants.js";
-import { chooseCanvasSize, createLayout, getChromeHeight } from "./layout.js";
+import { AD_LAYOUT } from "./ads.js";
+import { chooseCanvasSize, createLayout, getChromeSize } from "./layout.js";
 import { computeHandLayout } from "../game/handLayout.js";
 
 describe("chooseCanvasSize", () => {
@@ -15,8 +16,28 @@ describe("chooseCanvasSize", () => {
     expect(chooseCanvasSize(768, 940)).toEqual({ width: 480, height: 760 }); // tablet em pé
   });
 
-  it("reserva menos espaço de interface em telas baixas", () => {
-    expect(getChromeHeight(390)).toBeLessThan(getChromeHeight(800));
+  it("reserva menos altura em telas baixas", () => {
+    expect(getChromeSize({ width: 800, height: 390 }).height).toBeLessThan(
+      getChromeSize({ width: 800, height: 800 }).height,
+    );
+  });
+
+  it("celular e tablet: anúncio só no rodapé (tira altura, não largura)", () => {
+    const withAds = getChromeSize({ width: 390, height: 800 });
+    const noAds = getChromeSize({ width: 390, height: 800 }, false);
+    expect(withAds.width).toBe(0);
+    expect(withAds.height - noAds.height).toBe(AD_LAYOUT.footerHeight);
+  });
+
+  it("tela larga: anúncios nas laterais (tira largura, não altura)", () => {
+    const wide = getChromeSize({ width: 1400, height: 800 });
+    const noAds = getChromeSize({ width: 1400, height: 800 }, false);
+    expect(wide.width).toBeGreaterThan(2 * AD_LAYOUT.railWidth);
+    expect(wide.height).toBe(noAds.height);
+  });
+
+  it("sem anúncios não reserva espaço nenhum", () => {
+    expect(getChromeSize({ width: 1400, height: 800 }, false).width).toBe(0);
   });
 });
 

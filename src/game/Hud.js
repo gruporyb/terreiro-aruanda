@@ -1,5 +1,7 @@
 import { Container, Graphics } from "pixi.js";
 import { COLORS } from "../config/constants.js";
+import { ELEMENT_COLORS } from "./elementColors.js";
+import { MATCHUP_LABEL, getMatchupSummary } from "./rules/elements.js";
 import { getDemandAttack } from "./rules/gameLogic.js";
 import { createLabel } from "./ui/createLabel.js";
 
@@ -11,6 +13,7 @@ export class Hud extends Container {
   #bars = new Graphics();
   #harmony;
   #demand;
+  #matchup;
   #axe;
   #turn;
   #shield;
@@ -28,6 +31,7 @@ export class Hud extends Container {
 
     this.#harmony = labelAt(hud.harmony, { bold: true });
     this.#demand = labelAt(hud.demand, { bold: true });
+    this.#matchup = labelAt(hud.demand.matchup, { size: 13, color: COLORS.textBody });
     this.#axe = labelAt(hud.axe, { bold: true, anchorX: 0.5 });
     this.#turn = labelAt(hud.turn, { bold: true });
     this.#shield = labelAt(hud.shield, { color: COLORS.textBody });
@@ -47,6 +51,7 @@ export class Hud extends Container {
       this.#bars,
       this.#harmony,
       this.#demand,
+      this.#matchup,
       this.#axe,
       this.#turn,
       this.#shield,
@@ -57,7 +62,11 @@ export class Hud extends Container {
 
   update(state) {
     this.#harmony.text = `Harmonia do terreiro  ${state.harmony}/${state.ruleset.maxHarmony}`;
-    this.#demand.text = `${state.demand.name}  ${state.demand.health}/${state.demand.maxHealth}`;
+    const { name, element, health, maxHealth } = state.demand;
+    const { weakTo, resists } = getMatchupSummary(element);
+    this.#demand.text = `${name} de ${element}  ${health}/${maxHealth}`;
+    this.#demand.style.fill = ELEMENT_COLORS[element];
+    this.#matchup.text = `${weakTo} ${MATCHUP_LABEL.strong}  ${resists} ${MATCHUP_LABEL.weak}`;
     this.#axe.text = `Axé  ${state.axe}/${state.maxAxe}`;
     this.#turn.text = `Giro ${state.turn}`;
     this.#shield.text = `Proteção: ${state.shield}`;

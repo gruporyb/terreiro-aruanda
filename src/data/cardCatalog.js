@@ -40,4 +40,12 @@ export const CARD_CATALOG = Object.freeze([
   card("pai-joaquim", "Pai Joaquim", ELEMENT.TERRA, 1, 1, 3, PASSE.CURA, 1),
   card("caboclo-pena-branca", "Caboclo Pena Branca", ELEMENT.MATA, 2, 3, 2, PASSE.CURA, 2),
   card("exu-tranca-ruas", "Exu Tranca-Ruas", ELEMENT.FOGO, 2, 4, 3),
+  card("cobra-coral", "Caboclo Cobra Coral", ELEMENT.AGUA, 2, 5, 1),
+  card("ze-pelintra", "Zé Pelintra", ELEMENT.AR, 2, 4, 1, PASSE.GUIA, 1),
+  card("pombagira-sete-saias", "Pombagira Sete Saias", ELEMENT.FOGO, 3, 6, 2, PASSE.DESCARREGO, 1),
+  card("vovo-cambinda", "Vovó Cambinda", ELEMENT.AGUA, 1, 1, 2, PASSE.CURA, 2),
+  card("arranca-toco", "Caboclo Arranca-Toco", ELEMENT.TERRA, 3, 6, 3),
+  card("ere-doum", "Erê Doum", ELEMENT.AR, 1, 1, 2, PASSE.GUIA, 1),
+  card("seu-marujo", "Seu Marujo", ELEMENT.AGUA, 3, 7, 1, PASSE.CURA, 1),
+  card("cigana-carmencita", "Cigana Carmencita", ELEMENT.FOGO, 2, 5, 0),
 ]);

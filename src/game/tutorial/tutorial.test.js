@@ -86,6 +86,7 @@ describe("tutorial de ponta a ponta (só regras)", () => {
 
     expect(state.status).toBe(GAME_STATUS.PLAYING);
     expect(state.harmony).toBe(state.ruleset.maxHarmony); // a cura devolveu o dano
-    expect(state.demand.health).toBe(state.demand.maxHealth - 4); // coco (3) + Pai Joaquim (1)
+    // Zé do Coco (Fogo) causa 3; Pai Joaquim (Terra) causa metade de 1, arredondado para baixo: 0
+    expect(state.demand.health).toBe(state.demand.maxHealth - 3);
   });
 });

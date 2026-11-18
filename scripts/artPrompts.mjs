@@ -37,4 +37,20 @@ export const ENTITY_PROMPTS = {
     "Caboclo Pena Branca of Umbanda, an Indigenous-inspired healer with a white feather headdress, holding healing herbs in a forest clearing, serene and wise. Element: Forest.",
   "exu-tranca-ruas":
     "Exu Tranca-Ruas, guardian of the streets in Umbanda, depicted as a noble protector (not demonic, no horns): black and red cape, holding a cane, standing firm at a crossroads gate with lit candles. Element: Fire.",
+  "cobra-coral":
+    "Caboclo Cobra Coral of Umbanda, an Indigenous-inspired guardian of rivers: feathered headdress in red and coral tones, holding a spear, standing beside a flowing river with a coral snake motif on his armband. Element: Water.",
+  "ze-pelintra":
+    "Zé Pelintra, the beloved malandro spirit of Umbanda: white suit, red tie, white panama hat tilted, a cane, a warm confident smile, a lively night street with gentle breeze. Dignified and charismatic, no caricature. Element: Air.",
+  "pombagira-sete-saias":
+    "Pombagira Sete Saias, a respected female spirit guide of Umbanda: layered red and black skirts swirling around her, elegant and strong posture, candlelight and warm flames, regal and protective, not sexualized. Element: Fire.",
+  "vovo-cambinda":
+    "Preta Velha Vovó Cambinda, an elderly African-Brazilian spirit grandmother of Umbanda: white headscarf, shawl, holding a gourd of water and a rosary, calm smile, rain gently falling over a small garden. Element: Water.",
+  "arranca-toco":
+    "Caboclo Arranca-Toco of Umbanda, a powerful Indigenous-inspired forest guardian: strong stance, feathered headdress in brown and green, holding a heavy wooden staff, standing on dark rich earth with tree roots. Element: Earth.",
+  "ere-doum":
+    "Erê Doum, a gentle twin child spirit of Umbanda: smiling child holding colorful candies and a small toy, soap bubbles and butterflies floating in the air, soft pastel colors, innocent and joyful. Element: Air.",
+  "seu-marujo":
+    "Seu Marujo, a sailor spirit of Umbanda: navy and white sailor uniform and cap, strong calm posture at the helm of a wooden boat, stormy sea turning calm at dawn, a rope in his hands. Element: Water.",
+  "cigana-carmencita":
+    "Cigana Carmencita, a Cigana spirit guide of Umbanda: fiery red and orange shawl, gold jewelry, a tambourine, dancing beside a bonfire under the stars, joyful and dignified. Element: Fire.",
 };

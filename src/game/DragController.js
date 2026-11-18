@@ -11,14 +11,16 @@ export class DragController {
   #zone;
   #canStart;
   #onDrop;
+  #onStart;
   #view = null;
   #grabOffset = { x: 0, y: 0 };
 
   /** @param {{ width: number, height: number }} bounds tamanho lógico do canvas */
-  constructor(stage, { bounds, zone, canStart, onDrop }) {
+  constructor(stage, { bounds, zone, canStart, onStart = () => {}, onDrop }) {
     this.#zone = zone;
     this.#canStart = canStart;
     this.#onDrop = onDrop;
+    this.#onStart = onStart;
 
     // O palco precisa ser interativo e cobrir a tela para receber move/up em qualquer ponto.
     stage.eventMode = "static";
@@ -38,6 +40,7 @@ export class DragController {
     // Mantém o ponto onde a carta foi "agarrada" sob o ponteiro.
     this.#grabOffset = { x: event.global.x - view.x, y: event.global.y - view.y };
     view.startDrag(view.x, view.y);
+    this.#onStart(view);
   }
 
   #move(event) {

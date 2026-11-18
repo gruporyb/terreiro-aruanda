@@ -1,19 +1,23 @@
 import { useEffect, useState } from "react";
-import { chooseCanvasSize, getChromeHeight } from "../config/layout.js";
+import { AD_CONFIG } from "../config/ads.js";
+import { chooseCanvasSize, getChromeSize } from "../config/layout.js";
 
 const RESIZE_DEBOUNCE_MS = 250;
 
 function readCanvasSize() {
   const viewport = window.visualViewport ?? window;
-  const width = viewport.width ?? window.innerWidth;
-  const height = viewport.height ?? window.innerHeight;
-  return chooseCanvasSize(width, height - getChromeHeight(height));
+  const size = {
+    width: viewport.width ?? window.innerWidth,
+    height: viewport.height ?? window.innerHeight,
+  };
+  const chrome = getChromeSize(size, AD_CONFIG.enabled);
+  return chooseCanvasSize(size.width - chrome.width, size.height - chrome.height);
 }
 
 /**
- * Tamanho lógico do canvas para a tela atual. Recalcula ao redimensionar ou
- * girar o aparelho e só devolve um novo objeto se o tamanho realmente mudou
- * (evita recriar o canvas à toa).
+ * Tamanho lógico do canvas para a tela atual (já descontando barra e anúncios).
+ * Recalcula ao redimensionar ou girar o aparelho e só devolve um novo objeto
+ * se o tamanho realmente mudou (evita recriar o canvas à toa).
  */
 export function useCanvasSize() {
   const [size, setSize] = useState(readCanvasSize);

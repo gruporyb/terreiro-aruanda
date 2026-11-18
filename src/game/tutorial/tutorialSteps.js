@@ -62,6 +62,11 @@ export const TUTORIAL_STEPS = Object.freeze([
     "Muito bem! A barra vermelha diminuiu. Quando a vida da demanda chegar a zero, você vence.",
     ["demand"],
   ),
+  info(
+    "element",
+    "A demanda tem um elemento (veja no nome). Contra Fogo, Água causa +30% e Terra causa metade: veja o ½ no Pai Joaquim.",
+    ["demand", "card:pai-joaquim"],
+  ),
   playCard(
     "defense",
     "Agora chame o Pai Joaquim. A Defesa dele cria proteção, que absorve o ataque da demanda até o fim do giro.",
