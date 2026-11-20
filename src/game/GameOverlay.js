@@ -21,7 +21,7 @@ export class GameOverlay extends Container {
   #subtitle;
   #reward;
 
-  constructor({ layout, onRestart, onMenu }) {
+  constructor({ layout, onRestart, onMenu, restartLabel = "Jogar novamente" }) {
     super();
     this.visible = false;
 
@@ -67,7 +67,7 @@ export class GameOverlay extends Container {
     dim.eventMode = "static";
 
     const restart = new Button({
-      label: "Jogar novamente",
+      label: restartLabel,
       x: centerX - 100,
       y: top + 196,
       width: 200,
@@ -87,9 +87,12 @@ export class GameOverlay extends Container {
     this.addChild(dim, this.#title, this.#subtitle, this.#reward, restart, menu);
   }
 
-  /** @param {string | null} rewardText texto da recompensa (só na vitória) */
-  update(status, rewardText = null) {
-    const ending = ENDINGS[status];
+  /**
+   * @param {string | null} rewardText texto da recompensa (só na vitória)
+   * @param {{ title: string, subtitle: string } | null} customEnding textos próprios (ex.: duelo online)
+   */
+  update(status, rewardText = null, customEnding = null) {
+    const ending = ENDINGS[status] && (customEnding ?? ENDINGS[status]);
     this.visible = Boolean(ending);
     if (!ending) return;
     this.#title.text = ending.title;

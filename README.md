@@ -153,3 +153,81 @@ Jogado no próprio tabuleiro, com mão fixa e demanda de Fogo: objetivo, Axé,
 ícones, jogar uma carta, **elementos**, defesa, encerrar o giro e passe de
 cura. Contornos pulsantes mostram o que olhar ou tocar; nos passos de ação só a
 jogada esperada é aceita. Texto e ordem em `game/tutorial/tutorialSteps.js`.
+
+## Jogar online (duelo entre duas pessoas)
+
+No menu, **Jogar online** coloca você numa **fila virtual**. Ao surgir outro
+jogador, vocês duelam: **um é o Terreiro e o outro a Demanda** (sorteado).
+
+**Regras do duelo**
+
+- Os dois começam **iguais**: mesma vida (30), mesmo Axé (3 na 1ª rodada, +1 por
+  rodada até 6) e baralhos de mesma composição (cada um com o seu, embaralhado).
+- **30 segundos por turno.** Ao zerar, o turno passa sozinho.
+- **Primeira rodada:** cada jogador pode **trocar até 3 cartas** (30 s; quem não
+  confirmar mantém a mão). O duelo começa quando os dois confirmam ou o tempo acaba.
+- Cartas jogadas atacam o **adversário**. A **Defesa** vira proteção, que dura até
+  o início do seu próximo turno. **Cura** restaura sua vida, **Guia** compra
+  cartas e **Descarrego** tira proteção do adversário antes do dano.
+- A **Demanda** tem um elemento sorteado: as entidades do Terreiro causam +30% ou
+  metade contra ele (mesmas regras do jogo solo). Em compensação, **a Demanda
+  joga primeiro**. Isso fica em `PVP_RULES`, em `game/pvp/pvpRules.js`.
+- Vence quem zerar a vida do outro **ou** quem ficar na partida se o oponente
+  desistir ou cair. Cada vitória online também rende um **sacramento**.
+
+**Rodar localmente** (dois terminais)
+
+```bash
+npm install
+npm run server   # servidor online em ws://localhost:8080/ws
+npm run dev      # o Vite repassa /ws para o servidor
+```
+
+Abra o jogo em duas abas (ou dois aparelhos) e toque em *Jogar online* nas duas.
+
+**Publicar**
+
+| Variável | Onde | Para quê |
+|---|---|---|
+| `PORT`, `HOST` | servidor | porta e interface (padrão 8080) |
+| `ALLOWED_ORIGINS` | servidor | origens permitidas, separadas por vírgula (ex.: `https://jogo.exemplo.com`). Vazio aceita qualquer uma |
+| `VITE_ONLINE_URL` | build do site | endereço do servidor, ex.: `wss://jogo.exemplo.com/ws` (veja `.env.example`) |
+
+Use `wss://` (HTTPS) em produção, normalmente atrás de um proxy reverso que
+repasse o WebSocket. `GET /health` informa conexões, fila e partidas.
+
+**Arquitetura**
+
+```
+server/
+├── index.js / createServer.js   # HTTP + WebSocket (biblioteca ws)
+├── gameServer.js                # conexões, fila e partidas (sem WebSocket: testável em memória)
+├── matchmaker.js                # fila virtual e sorteio dos papéis
+├── match.js                     # partida autoritativa + relógio de 30 s
+├── protocol.js                  # mensagens e validação (compartilhado com o cliente)
+└── wsTransport.js               # adaptador ws (origem, tamanho máximo, heartbeat)
+src/game/pvp/                    # regras PURAS do duelo (duel.js, pvpRules.js)
+src/online/                      # OnlineSession (WebSocket), estado puro e narração dos eventos
+src/game/online/                 # cena do duelo: HUD, troca de cartas, cartas do adversário
+```
+
+- **O servidor decide tudo.** O cliente só envia intenções (`mulligan`, `play`,
+  `endTurn`) e recebe a visão atualizada: a mão do adversário **nunca** é enviada.
+- Toda mensagem é validada (tipo, formato e tamanho); há limite de mensagens por
+  segundo e *heartbeat* que derruba conexões "fantasma".
+- O relógio é injetável, então os testes avançam o tempo sem esperar.
+
+**Limitações conhecidas**
+
+- Sem login, ranking ou reconexão: cair no meio da partida conta como desistência.
+- Fila e partidas ficam na memória de **um** processo (não escala para vários
+  servidores sem um armazenamento compartilhado).
+- Os sacramentos ficam no navegador e vitórias por abandono também contam, então
+  não há proteção contra combinar derrotas/desistências para "fazer" sacramentos.
+- Se uma pessoa ficar sozinha na fila, ela espera: não há oponente automático.
+
+**Testes do online** (`npm test`): regras do duelo, protocolo, fila, partidas com
+relógio falso, **servidor real com sockets reais** (`server/e2e.test.js`) e
+cliente real contra servidor real (`src/online/onlineSession.e2e.test.js`). Os
+testes de socket usam o `WebSocket` nativo do Node 22+ (em versões anteriores
+eles são ignorados).

@@ -3,6 +3,7 @@ import IconLegend from "../components/IconLegend.jsx";
 import SoundToggle from "../components/SoundToggle.jsx";
 import { DIFFICULTIES, DIFFICULTY_ORDER } from "../data/difficulties.js";
 import { sound } from "../game/audio/sound.js";
+import { MAX_NAME_LENGTH } from "../../server/protocol.js";
 import {
   SACRAMENTOS_TO_UNLOCK,
   isDifficultyUnlocked,
@@ -34,7 +35,10 @@ export default function MainMenu({
   isTutorialDone,
   isMuted,
   onToggleMute,
+  nickname,
+  onNicknameChange,
   onPlay,
+  onOnline,
   onTutorial,
 }) {
   const click = (action) => () => {
@@ -88,11 +92,26 @@ export default function MainMenu({
         <button type="button" className="button button--primary" onClick={click(onPlay)}>
           Jogar
         </button>
+        <button type="button" className="button" onClick={click(onOnline)}>
+          Jogar online
+        </button>
         <button type="button" className="button button--secondary" onClick={click(onTutorial)}>
           Tutorial
           {!isTutorialDone && <span className="badge">Recomendado</span>}
         </button>
       </div>
+
+      <label className="nickname">
+        <span className="nickname__label">Apelido para o jogo online</span>
+        <input
+          type="text"
+          className="nickname__input"
+          value={nickname}
+          maxLength={MAX_NAME_LENGTH}
+          placeholder="Jogador"
+          onChange={(event) => onNicknameChange(event.target.value)}
+        />
+      </label>
 
       <details className="help">
         <summary>Como jogar, elementos e legenda dos ícones</summary>
@@ -102,6 +121,12 @@ export default function MainMenu({
           encerre o giro. Desfaça a demanda antes que a Harmonia do terreiro
           se esgote. Cada vitória rende um sacramento; com{" "}
           {SACRAMENTOS_TO_UNLOCK} você libera a Demanda suprema.
+        </p>
+        <p>
+          <strong>Online:</strong> você entra numa fila e duela contra outra
+          pessoa. Um será o Terreiro e o outro a Demanda, com a mesma vida e o
+          mesmo Axé. Cada turno tem 30 segundos e, na primeira rodada, você pode
+          trocar até 3 cartas. A Demanda joga primeiro.
         </p>
         <IconLegend />
         <ElementGuide />

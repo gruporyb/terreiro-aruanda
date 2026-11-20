@@ -12,14 +12,18 @@ import { SESSION_MODE, createSession } from "./game/session.js";
 import { usePersistentState } from "./hooks/usePersistentState.js";
 import GameScreen from "./screens/GameScreen.jsx";
 import MainMenu from "./screens/MainMenu.jsx";
+import OnlineScreen from "./screens/OnlineScreen.jsx";
 
-/** Alterna entre o menu e a partida. `session === null` significa menu. */
+/** Alterna entre o menu, a partida solo/tutorial e o duelo online. */
 export default function App() {
   const [savedDifficulty, setDifficulty] = usePersistentState("terreiro.difficulty", DEFAULT_DIFFICULTY, isDifficulty);
   const [isTutorialDone, setTutorialDone] = usePersistentState("terreiro.tutorialDone", false, (v) => typeof v === "boolean");
   const [progress, setProgress] = usePersistentState("terreiro.progress", createProgress(), isValidProgress);
   const [isMuted, setMuted] = usePersistentState("terreiro.muted", false, (v) => typeof v === "boolean");
-  const [session, setSession] = useState(null);
+  const [nickname, setNickname] = usePersistentState("terreiro.nickname", "", (v) => typeof v === "string");
+  // Qual tela está aberta: null = menu; { kind: "solo", session } ou { kind: "online" }.
+  const [screen, setScreen] = useState(null);
+  const [onlineAttempt, setOnlineAttempt] = useState(0); // muda para reconectar do zero
 
   // Uma dificuldade salva que ainda está bloqueada volta ao padrão.
   const difficulty = isDifficultyUnlocked(savedDifficulty, progress) ? savedDifficulty : DEFAULT_DIFFICULTY;
@@ -44,7 +48,8 @@ export default function App() {
     return reward;
   }, [setProgress]);
 
-  const goToMenu = () => setSession(null);
+  const goToMenu = () => setScreen(null);
+  const startSolo = (session) => setScreen({ kind: "solo", session });
   const finishTutorial = () => {
     setTutorialDone(true);
     goToMenu();
@@ -53,16 +58,28 @@ export default function App() {
 
   return (
     <SiteLayout>
-      {session ? (
+      {screen?.kind === "solo" && (
         <GameScreen
-          session={session}
+          session={screen.session}
           isMuted={isMuted}
           onToggleMute={toggleMute}
           onMenu={goToMenu}
           onTutorialFinish={finishTutorial}
           onVictory={handleVictory}
         />
-      ) : (
+      )}
+      {screen?.kind === "online" && (
+        <OnlineScreen
+          key={onlineAttempt}
+          nickname={nickname}
+          isMuted={isMuted}
+          onToggleMute={toggleMute}
+          onExit={goToMenu}
+          onRetry={() => setOnlineAttempt((attempt) => attempt + 1)}
+          onVictory={handleVictory}
+        />
+      )}
+      {!screen && (
         <MainMenu
           difficulty={difficulty}
           onDifficultyChange={setDifficulty}
@@ -70,8 +87,11 @@ export default function App() {
           isTutorialDone={isTutorialDone}
           isMuted={isMuted}
           onToggleMute={toggleMute}
-          onPlay={() => setSession(createSession({ mode: SESSION_MODE.GAME, difficulty }))}
-          onTutorial={() => setSession(createSession({ mode: SESSION_MODE.TUTORIAL }))}
+          nickname={nickname}
+          onNicknameChange={setNickname}
+          onPlay={() => startSolo(createSession({ mode: SESSION_MODE.GAME, difficulty }))}
+          onOnline={() => setScreen({ kind: "online" })}
+          onTutorial={() => startSolo(createSession({ mode: SESSION_MODE.TUTORIAL }))}
         />
       )}
     </SiteLayout>

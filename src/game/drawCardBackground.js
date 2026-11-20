@@ -4,11 +4,12 @@ const BORDER_BY_HIGHLIGHT = {
   idle: { color: COLORS.borderIdle, width: BORDER_WIDTH.idle },
   active: { color: COLORS.borderActive, width: BORDER_WIDTH.active },
   blocked: { color: COLORS.borderBlocked, width: BORDER_WIDTH.active },
+  selected: { color: COLORS.axe, width: BORDER_WIDTH.active },
 };
 
 /**
  * Redesenha o fundo da carta.
- * @param {"idle"|"active"|"blocked"} highlight estado da borda
+ * @param {"idle"|"active"|"blocked"|"selected"} highlight estado da borda
  * @param {boolean} isPlayable cartas sem Axé suficiente ficam acinzentadas
  */
 export function drawCardBackground(graphics, { highlight, isPlayable }) {

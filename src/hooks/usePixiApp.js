@@ -29,13 +29,15 @@ const destroyApp = (app) => app.destroy(true, { children: true });
  * (ou quando o `loader` muda, por exemplo ao girar o aparelho).
  *
  * @param {React.RefObject<HTMLElement>} containerRef elemento que receberá o canvas
- * @param {{ size: {width: number, height: number}, preload?: () => Promise<any>, setup: (app: Application, assets: any) => void }} loader
+ * @param {{ size: {width: number, height: number}, preload?: () => Promise<any>, setup: (app: Application, assets: any) => ({ dispose?: () => void } | void) }} loader
+ *   `setup` pode devolver um objeto com `dispose()`, chamado ao desmontar
  */
 export function usePixiApp(containerRef, loader) {
   useEffect(() => {
     const app = new Application();
     let isDisposed = false;
     let isInitialized = false;
+    let scene = null;
 
     const mount = async () => {
       const cssWidth = containerRef.current.clientWidth;
@@ -50,7 +52,7 @@ export function usePixiApp(containerRef, loader) {
       }
 
       containerRef.current.appendChild(app.canvas);
-      loader.setup(app, assets);
+      scene = loader.setup(app, assets);
     };
 
     mount().catch((error) =>
@@ -59,6 +61,7 @@ export function usePixiApp(containerRef, loader) {
 
     return () => {
       isDisposed = true;
+      scene?.dispose?.();
       if (isInitialized) destroyApp(app);
     };
   }, [containerRef, loader]);

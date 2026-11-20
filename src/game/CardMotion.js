@@ -14,6 +14,7 @@ export class CardMotion {
   #slot = { x: 0, y: 0, rotation: 0 };
   #dragPoint = null;
   #isHovered = false;
+  #isSelected = false;
   #isDismissing = false;
   /** Tempo do pulso em ms; `null` quando não há pulso ativo. */
   #pulseElapsedMs = null;
@@ -50,6 +51,11 @@ export class CardMotion {
     this.#isHovered = isHovered;
   }
 
+  /** Carta marcada pelo jogador (ex.: para trocar): fica levantada como no hover. */
+  setSelected(isSelected) {
+    this.#isSelected = isSelected;
+  }
+
   startDrag(point) {
     this.#dragPoint = { ...point };
   }
@@ -71,6 +77,7 @@ export class CardMotion {
     this.#isDismissing = true;
     this.#dragPoint = null;
     this.#isHovered = false;
+    this.#isSelected = false;
     this.triggerPulse();
   }
 
@@ -103,7 +110,7 @@ export class CardMotion {
     if (this.#dragPoint) {
       return { ...this.#dragPoint, rotation: 0, scale: dragScale, alpha };
     }
-    if (this.#isHovered) {
+    if (this.#isHovered || this.#isSelected) {
       return {
         x: this.#slot.x,
         y: this.#slot.y - hoverLift,

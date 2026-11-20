@@ -11,15 +11,18 @@ export class Hand extends Container {
 
   #layout;
   #art;
+  #onCardTap;
 
   /**
    * @param {object} handLayout configuração da mão (layout.hand)
    * @param {Map<string, import("pixi.js").Texture>} [art] id do modelo -> ilustração
+   * @param {{ onCardTap?: (view: import("./CardView.js").CardView) => void }} [options]
    */
-  constructor(handLayout, art = new Map()) {
+  constructor(handLayout, art = new Map(), { onCardTap = null } = {}) {
     super();
     this.#layout = handLayout;
     this.#art = art;
+    this.#onCardTap = onCardTap;
     // Permite que cartas em hover/arraste fiquem acima das demais (zIndex).
     this.sortableChildren = true;
   }
@@ -49,6 +52,11 @@ export class Hand extends Container {
   /** Procura, entre as cartas da mão, a que veio do modelo `templateId`. */
   findViewByTemplate(templateId) {
     return [...this.#views.values()].find((view) => view.card.templateId === templateId) ?? null;
+  }
+
+  /** Marca as cartas cujos ids estão em `selectedIds` (as demais são desmarcadas). */
+  setSelected(selectedIds) {
+    for (const view of this.#views.values()) view.setSelected(selectedIds.has(view.card.id));
   }
 
   /** Atualiza os selos de elemento (+30% / ½) conforme a demanda atual. */
@@ -87,6 +95,7 @@ export class Hand extends Container {
   #spawn(card) {
     const view = new CardView(card, this.#art.get(card.templateId) ?? null);
     view.placeAt(this.#layout.spawn.x, this.#layout.spawn.y);
+    if (this.#onCardTap) view.on("pointertap", () => this.#onCardTap(view));
     this.#views.set(card.id, view);
     this.addChild(view);
     return view;

@@ -3,6 +3,7 @@ import { COLORS } from "../config/constants.js";
 import { ELEMENT_COLORS } from "./elementColors.js";
 import { MATCHUP_LABEL, getMatchupSummary } from "./rules/elements.js";
 import { getDemandAttack } from "./rules/gameLogic.js";
+import { drawAxeOrbs, drawResourceBar } from "./ui/resourceBars.js";
 import { createLabel } from "./ui/createLabel.js";
 
 const LABEL_SIZE = 16;
@@ -81,29 +82,9 @@ export class Hud extends Container {
   }
 
   #drawBars(state) {
-    const { barHeight, harmony, demand } = this.#hud;
     const bars = this.#bars.clear();
-
-    const drawBar = ({ barX, barY, barWidth }, ratio, color) => {
-      bars.roundRect(barX, barY, barWidth, barHeight, barHeight / 2).fill({ color: COLORS.track });
-      if (ratio > 0) {
-        bars.roundRect(barX, barY, barWidth * ratio, barHeight, barHeight / 2).fill({ color });
-      }
-    };
-    drawBar(harmony, state.harmony / state.ruleset.maxHarmony, COLORS.harmony);
-    drawBar(demand, state.demand.health / state.demand.maxHealth, COLORS.demand);
-
-    this.#drawAxeOrbs(state);
-  }
-
-  #drawAxeOrbs({ axe, maxAxe }) {
-    const { orbRadius, orbSpacing, axe: spec } = this.#hud;
-    for (let i = 0; i < maxAxe; i++) {
-      const x = spec.orbsX + (i - (maxAxe - 1) / 2) * orbSpacing;
-      this.#bars
-        .circle(x, spec.orbsY, orbRadius)
-        .fill({ color: i < axe ? COLORS.axe : COLORS.track })
-        .stroke({ width: 2, color: COLORS.axe });
-    }
+    drawResourceBar(bars, this.#hud, this.#hud.harmony, state.harmony / state.ruleset.maxHarmony, COLORS.harmony);
+    drawResourceBar(bars, this.#hud, this.#hud.demand, state.demand.health / state.demand.maxHealth, COLORS.demand);
+    drawAxeOrbs(bars, this.#hud, state.axe, state.maxAxe);
   }
 }

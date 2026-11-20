@@ -62,4 +62,16 @@ describe("CardMotion", () => {
     run(motion, 400);
     expect(motion.isDismissed).toBe(true);
   });
+
+  it("carta selecionada fica levantada, mesmo sem hover, até ser desmarcada", () => {
+    const motion = new CardMotion();
+    motion.placeAt(100, 400);
+    motion.setSelected(true);
+    let pose = run(motion, 200);
+    expect(pose.y).toBeCloseTo(400 - MOTION.hoverLift, 2);
+
+    motion.setSelected(false);
+    pose = run(motion, 200);
+    expect(pose.y).toBeCloseTo(400, 2);
+  });
 });

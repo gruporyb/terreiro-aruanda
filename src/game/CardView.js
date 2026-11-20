@@ -32,6 +32,7 @@ export class CardView extends Container {
   #isHovered = false;
   #isDragging = false;
   #isDismissing = false;
+  #isSelected = false;
   #order = 0;
   #matchup = MATCHUP.NEUTRAL;
   #chip = new Container();
@@ -105,6 +106,15 @@ export class CardView extends Container {
     this.#chipLabel.text = MATCHUP_LABEL[matchup];
   }
 
+  /** Marca a carta (borda âmbar e levantada), p.ex. para a troca da primeira rodada. */
+  setSelected(isSelected) {
+    if (this.#isSelected === isSelected) return;
+    this.#isSelected = isSelected;
+    this.#motion.setSelected(isSelected);
+    this.#updateZIndex();
+    this.#refresh();
+  }
+
   setPlayable(isPlayable) {
     this.#isPlayable = isPlayable;
     this.#refresh();
@@ -136,6 +146,7 @@ export class CardView extends Container {
   dismiss(x, y) {
     this.#isDismissing = true;
     this.#isHovered = false;
+    this.#isSelected = false;
     this.eventMode = "none";
     this.#motion.setSlot({ x, y, rotation: 0 });
     this.#motion.dismiss();
@@ -307,13 +318,14 @@ export class CardView extends Container {
 
   #updateZIndex() {
     if (this.#isDragging) this.zIndex = Z_INDEX.dragging;
-    else if (this.#isHovered) this.zIndex = Z_INDEX.hovered;
+    else if (this.#isHovered || this.#isSelected) this.zIndex = Z_INDEX.hovered;
     else this.zIndex = this.#order;
   }
 
   #refresh() {
     const isFocused = this.#isHovered || this.#isDragging;
-    const highlight = !isFocused ? "idle" : this.#isPlayable ? "active" : "blocked";
+    let highlight = !isFocused ? "idle" : this.#isPlayable ? "active" : "blocked";
+    if (this.#isSelected) highlight = "selected";
     drawCardBackground(this.#background, { highlight, isPlayable: this.#isPlayable });
 
     this.#costBadge
